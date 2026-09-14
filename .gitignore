@@ -1,0 +1,20 @@
+# --- Bitcode --- #
+__pycache__/
+
+# --- MacOS Junk --- #
+.DS_Store
+
+# --- Build --- #
+dist/
+
+# --- VSCode snippets --- #
+.vscode/*.code-snippets
+
+# --- tests ---
+.pytest_cache
+
+# --- typechecks --- #
+.mypy_cache
+
+# --- tox --- #
+.tox

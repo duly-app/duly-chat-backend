@@ -1,0 +1,29 @@
+FROM python:3.13-slim AS poetry-builder
+WORKDIR /app
+
+COPY --chown=1002:1002 pyproject.toml poetry.lock ./
+
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir poetry && \
+    poetry install --no-root --only=main
+
+FROM python:3.13-slim AS runtime
+
+RUN groupadd -g 1002 appuser && useradd -u 1002 -g appuser appuser
+
+WORKDIR /app
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
+
+COPY --chown=1002:1002 --from=poetry-builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --chown=1002:1002 src ./src
+
+USER appuser
+
+EXPOSE 8000
+
+ENTRYPOINT ["fastapi"]
+CMD ["dev", "src/app.py", "--host", "0.0.0.0", "--port", "8000"]
