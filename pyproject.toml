@@ -8,7 +8,10 @@ authors = [
 license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[standard] (>=0.141.1,<0.142.0)"
+    "fastapi[standard] (>=0.141.1,<0.142.0)",
+    "anthropic (>=1.5.0,<2.0.0)",
+    "pyjwt (>=2.14.0,<3.0.0)",
+    "requests (>=2.34.2,<3.0.0)"
 ]
 
 
@@ -34,3 +37,14 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 src_paths = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)"
+]
