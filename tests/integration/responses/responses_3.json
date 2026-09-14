@@ -1,0 +1,75 @@
+[
+    {
+        "input": {
+            "role": "user",
+            "content": "I have a note somewhere with a bunch of groceries, could you tell me the total cost?"
+        },
+        "next_response": {
+            "stop_reason": "tool_use",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "toolu_01",
+                    "name": "get_notes",
+                    "input": {}
+                }
+            ],
+            "usage": {
+                "input_tokens": 120,
+                "output_tokens": 30
+            }
+        }
+    },
+    {
+        "input": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_01"
+                }
+            ]
+        },
+        "next_response": {
+            "stop_reason": "tool_use",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "toolu_02",
+                    "name": "sum",
+                    "input": {
+                        "numbers": [2.5, 3.2, 7.8]
+                    }
+                }
+            ],
+            "usage": {
+                "input_tokens": 300,
+                "output_tokens": 40
+            }
+        }
+    },
+    {
+        "input": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_02"
+                }
+            ]
+        },
+        "next_response": {
+            "stop_reason": "end_turn",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Your groceries note comes to 13.50."
+                }
+            ],
+            "usage": {
+                "input_tokens": 420,
+                "output_tokens": 20
+            }
+        }
+    }
+]

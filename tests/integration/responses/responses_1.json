@@ -1,0 +1,21 @@
+[
+  {
+    "input": {
+      "role": "user",
+      "content": "How many notes do I have?"
+    },
+    "next_response": {
+      "stop_reason": "end_turn",
+      "content": [
+        {
+          "type": "text",
+          "text": "You have 5 notes, covering project ideas, meeting notes, FastAPI patterns, a TODO list, and your testing strategy."
+        }
+      ],
+      "usage": {
+        "input_tokens": 120,
+        "output_tokens": 45
+      }
+    }
+  }
+]
