@@ -3,7 +3,9 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
-from uuid import UUID
+from uuid import UUID, uuid4
+
+import requests
 
 from src.domain.notes import Note
 from src.domain.user import UserID
@@ -55,4 +57,65 @@ class NoteDB:
                 yield FullNote.from_dict(note_dict)
 
     def get_notes_by_user(self, user_id: UserID) -> list[Note]:
-        return [fn.to_note() for fn in self.notes if fn.user_id == user_id]
+        return [fn.to_note() for fn in self._live_notes(user_id)]
+
+    def search(self, user_id: UserID, keyword: str) -> list[Note]:
+        """Case-insensitive substring match.
+
+        The real service uses a tsvector, which stems words and won't match on
+        a prefix, so this fake is more generous than production.
+        """
+        needle = keyword.lower()
+
+        return [
+            fn.to_note()
+            for fn in self._live_notes(user_id)
+            if needle in fn.title.lower() or needle in fn.content.lower()
+        ]
+
+    def add(self, user_id: UserID, title: str, content: str) -> Note:
+        note = FullNote(
+            id=uuid4(),
+            title=title,
+            content=content,
+            created_at=datetime.datetime.now(datetime.timezone.utc),
+            user_id=user_id,
+            owner=user_id,
+        )
+        self.notes.append(note)
+
+        return note.to_note()
+
+    def update(
+        self,
+        user_id: UserID,
+        note_id: UUID,
+        title: str | None = None,
+        content: str | None = None,
+    ) -> Note:
+        note = self._owned_note(user_id, note_id)
+
+        if title is not None:
+            note.title = title
+
+        if content is not None:
+            note.content = content
+
+        note.version += 1
+
+        return note.to_note()
+
+    def delete(self, user_id: UserID, note_id: UUID) -> None:
+        """Soft delete, as the real service does: the row is kept and flagged."""
+        self._owned_note(user_id, note_id).deleted = True
+
+    def _live_notes(self, user_id: UserID) -> Iterable[FullNote]:
+        return [fn for fn in self.notes if fn.user_id == user_id and not fn.deleted]
+
+    def _owned_note(self, user_id: UserID, note_id: UUID) -> FullNote:
+        note = next((fn for fn in self._live_notes(user_id) if fn.id == note_id), None)
+
+        if note is None:
+            raise requests.HTTPError(f"404 Not Found: /notes/{note_id}")
+
+        return note
