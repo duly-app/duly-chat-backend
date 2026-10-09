@@ -1,9 +1,9 @@
-import os
 from contextlib import asynccontextmanager
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
 
 from src.adapters.api.duly_api import DulyAPI
 from src.adapters.security.jwt_token_service import JWTTokenService
@@ -12,30 +12,27 @@ from src.chatbot.loop import chat_loop
 from src.chatbot.loop_result import conversation_history
 from src.chatbot.threads.thread_store import record_turn
 from src.chatbot.tools.registry import create_tool_registry
+from src.env import DULY_SERVICE_URI, Env, OSEnv
+
+router = APIRouter()
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    setup_dependencies(app)
-    yield
+class ChatRequest(BaseModel):
+    message: str
 
-
-app = FastAPI(title="Duly Chat Backend", lifespan=lifespan)
 
 security = HTTPBearer()
 
 
-def get_token_service() -> JWTTokenService:
-    signing_key = os.getenv("SIGNING_KEY", "")
-
-    return JWTTokenService(signing_key)
+def get_token_service(request: Request) -> JWTTokenService:
+    return request.app.state.token_service
 
 
 def get_api_adapter(
     request: Request,
     token_service: JWTTokenService = Depends(get_token_service),
 ) -> DulyAPI:
-    service_uri = os.getenv("DULY_SERVICE_URI", "http://localhost:8001")
+    service_uri = request.app.state.env[DULY_SERVICE_URI]
 
     return DulyAPI(
         service_uri,
@@ -45,10 +42,10 @@ def get_api_adapter(
     )
 
 
-@app.post("/threads/{thread_id}/messages")
+@router.post("/threads/{thread_id}/messages")
 async def chat(
     thread_id: UUID,
-    message: str,
+    body: ChatRequest,
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     token_service: JWTTokenService = Depends(get_token_service),
@@ -56,7 +53,11 @@ async def chat(
 ):
     payload = token_service.decode_token(credentials.credentials)
     if not payload:
-        return {"error": "Invalid token"}, 401
+        # Raised, not returned: FastAPI has no tuple convention, so returning
+        # (body, 401) ships the pair as a 200.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
 
     user_id = UUID(payload["sub"])
 
@@ -64,7 +65,7 @@ async def chat(
         outcome = chat_loop(
             user_id=user_id,
             thread_id=thread_id,
-            message=message,
+            message=body.message,
             jwt=credentials.credentials,
             api_adapter=api_adapter,
             anthropic_client=request.app.state.anthropic_client,
@@ -82,6 +83,23 @@ async def chat(
     }
 
 
-@app.get("/health")
+@router.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+def create_app(env: Env | None = None) -> FastAPI:
+    environment = env or OSEnv()
+
+    @asynccontextmanager
+    async def lifespan(application: FastAPI):
+        setup_dependencies(application, environment)
+        yield
+
+    application = FastAPI(title="Duly Chat Backend", lifespan=lifespan)
+    application.include_router(router)
+
+    return application
+
+
+app = create_app()

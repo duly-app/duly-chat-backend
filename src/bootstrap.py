@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Callable, TypeAlias
 
@@ -11,6 +10,7 @@ from src.adapters.security.service_token_service import ServiceTokenService
 from src.chatbot.context.context_block import SystemPromptBlock, ToolsBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
+from src.env import ANTHROPIC_API_KEY, SERVICE_KEY, SIGNING_KEY, Env
 
 ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
 AnthropicClientDependency: TypeAlias = Callable[[Request], Anthropic]
@@ -18,6 +18,7 @@ TokenServiceDependency: TypeAlias = Callable[[Request], JWTTokenService]
 ThreadStoreDependency: TypeAlias = Callable[[Request], ThreadStore]
 ServiceTokenServiceDependency: TypeAlias = Callable[[Request], ServiceTokenService]
 HTTPClientDependency: TypeAlias = Callable[[Request], requests.Session]
+EnvDependency: TypeAlias = Callable[[Request], Env]
 
 
 def create_context_builder() -> ContextBuilder:
@@ -35,18 +36,12 @@ def create_context_builder() -> ContextBuilder:
     return ContextBuilder([system_block, tools_block])
 
 
-def create_anthropic_client() -> Anthropic:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY environment variable not set")
-    return Anthropic(api_key=api_key)
+def create_anthropic_client(env: Env) -> Anthropic:
+    return Anthropic(api_key=env[ANTHROPIC_API_KEY])
 
 
-def create_token_service() -> JWTTokenService:
-    signing_key = os.getenv("SIGNING_KEY")
-    if not signing_key:
-        raise RuntimeError("SIGNING_KEY environment variable not set")
-    return JWTTokenService(signing_key)
+def create_token_service(env: Env) -> JWTTokenService:
+    return JWTTokenService(env[SIGNING_KEY])
 
 
 def create_http_client() -> requests.Session:
@@ -56,13 +51,8 @@ def create_http_client() -> requests.Session:
     return requests.Session()
 
 
-def create_service_token_service() -> ServiceTokenService:
-    service_key = os.getenv("SERVICE_KEY")
-    if not service_key:
-        raise RuntimeError("SERVICE_KEY environment variable not set")
-    if service_key == os.getenv("SIGNING_KEY"):
-        raise RuntimeError("SERVICE_KEY must not be the same as SIGNING_KEY")
-    return ServiceTokenService(service_key)
+def create_service_token_service(env: Env) -> ServiceTokenService:
+    return ServiceTokenService(env[SERVICE_KEY])
 
 
 def create_thread_store() -> ThreadStore:
@@ -70,12 +60,16 @@ def create_thread_store() -> ThreadStore:
     return ThreadStore()
 
 
-def setup_dependencies(app):
+def setup_dependencies(app, env: Env) -> None:
+    """Validate the environment before building anything that depends on it."""
+    env.validate()
+
+    app.state.env = env
     app.state.context_builder = create_context_builder()
-    app.state.anthropic_client = create_anthropic_client()
-    app.state.token_service = create_token_service()
+    app.state.anthropic_client = create_anthropic_client(env)
+    app.state.token_service = create_token_service(env)
     app.state.thread_store = create_thread_store()
-    app.state.service_token_service = create_service_token_service()
+    app.state.service_token_service = create_service_token_service(env)
     app.state.http_client = create_http_client()
 
 
@@ -117,5 +111,12 @@ def get_service_token_service() -> ServiceTokenServiceDependency:
 def get_http_client() -> HTTPClientDependency:
     def _get(request: Request) -> requests.Session:
         return request.app.state.http_client
+
+    return _get
+
+
+def get_env() -> EnvDependency:
+    def _get(request: Request) -> Env:
+        return request.app.state.env
 
     return _get
