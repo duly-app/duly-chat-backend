@@ -1,26 +1,55 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID
-
-import requests
 
 from src.adapters.api.api_adapter import APIAdapter
 from src.adapters.security.jwt_token_service import JWTTokenService
+from src.adapters.security.service_token_service import (
+    SERVICE_TOKEN_HEADER,
+    ServiceTokenService,
+)
 from src.domain import Note
 from src.domain.notes import NoteID
 from src.domain.user import Token
 
 
+class HTTPResponse(Protocol):
+    def raise_for_status(self) -> None: ...
+
+    def json(self) -> Any: ...
+
+
+class HTTPClient(Protocol):
+
+    def get(self, url: str, **kwargs: Any) -> HTTPResponse: ...
+
+    def post(self, url: str, **kwargs: Any) -> HTTPResponse: ...
+
+    def put(self, url: str, **kwargs: Any) -> HTTPResponse: ...
+
+    def delete(self, url: str, **kwargs: Any) -> HTTPResponse: ...
+
+
 class DulyAPI(APIAdapter[JWTTokenService]):
     _service_uri: str
+    _service_token_service: ServiceTokenService
+    _http: HTTPClient
 
-    def __init__(self, service_uri: str, token_service: JWTTokenService):
+    def __init__(
+        self,
+        service_uri: str,
+        token_service: JWTTokenService,
+        service_token_service: ServiceTokenService,
+        http_client: HTTPClient,
+    ):
         self._service_uri = service_uri
+        self._service_token_service = service_token_service
+        self._http = http_client
 
         super().__init__(token_service)
 
     def get_notes(self, token: Token) -> list[Note]:
-        response = requests.get(
+        response = self._http.get(
             f"{self._service_uri}/notes", headers=self._headers(token)
         )
         response.raise_for_status()
@@ -28,7 +57,7 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         return [self._to_note(note_data) for note_data in response.json()]
 
     def get_notes_by_keyword(self, token: Token, keyword: str) -> list[Note]:
-        response = requests.get(
+        response = self._http.get(
             f"{self._service_uri}/notes/search",
             headers=self._headers(token),
             params={"keyword": keyword},
@@ -38,9 +67,9 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         return [self._to_note(note_data) for note_data in response.json()]
 
     def create_note(self, token: Token, title: str, content: str) -> Note:
-        response = requests.post(
+        response = self._http.post(
             f"{self._service_uri}/notes",
-            headers=self._headers(token),
+            headers=self._write_headers(token),
             json={"title": title, "content": content},
         )
         response.raise_for_status()
@@ -60,9 +89,9 @@ class DulyAPI(APIAdapter[JWTTokenService]):
             if value is not None
         }
 
-        response = requests.put(
+        response = self._http.put(
             f"{self._service_uri}/notes/{note_id}",
-            headers=self._headers(token),
+            headers=self._write_headers(token),
             json=changes,
         )
         response.raise_for_status()
@@ -70,14 +99,21 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         return self._to_note(response.json())
 
     def delete_note(self, token: Token, note_id: NoteID) -> None:
-        response = requests.delete(
-            f"{self._service_uri}/notes/{note_id}", headers=self._headers(token)
+        response = self._http.delete(
+            f"{self._service_uri}/notes/{note_id}",
+            headers=self._write_headers(token),
         )
         response.raise_for_status()
 
     @staticmethod
     def _headers(token: Token) -> dict[str, str]:
         return {"Authorization": f"Bearer {token}"}
+
+    def _write_headers(self, token: Token) -> dict[str, str]:
+        return {
+            **self._headers(token),
+            SERVICE_TOKEN_HEADER: self._service_token_service.create_token(),
+        }
 
     @staticmethod
     def _to_note(data: dict[str, Any]) -> Note:
