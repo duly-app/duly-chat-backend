@@ -3,6 +3,7 @@ from typing import Any, ClassVar
 
 from anthropic.types import ToolParam
 
+from src.chatbot.threads.thread_store import ThreadID
 from src.domain.user import Token, UserID
 
 
@@ -11,7 +12,7 @@ class Tool(ABC):
     description: ClassVar[str]
     input_schema: ClassVar[dict[str, Any]]
 
-    def __init__(self, user_id: UserID, thread_id: str, jwt: Token):
+    def __init__(self, user_id: UserID, thread_id: ThreadID, jwt: Token):
         self.user_id = user_id
         self.thread_id = thread_id
         self.jwt = jwt

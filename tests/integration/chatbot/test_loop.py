@@ -3,7 +3,7 @@ from uuid import UUID
 
 import pytest
 from anthropic import Anthropic
-from anthropic.types import TextBlock
+from anthropic.types import MessageParam, TextBlock
 
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.errors import MaxIterationsExceeded, ResponseTruncated
@@ -20,6 +20,7 @@ from tests.integration.fakes.fake_token_service import FakeTokenService
 from tests.integration.fakes.fake_tools import with_testing_tools
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
+THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
 
 
 def test_chat_loop_returns_assistant_answer_on_end_turn(
@@ -33,7 +34,7 @@ def test_chat_loop_returns_assistant_answer_on_end_turn(
 
     outcome = chat_loop(
         user_id=USER_ID,
-        thread_id="thread-1",
+        thread_id=THREAD_ID,
         message="How many notes do I have?",
         jwt=token,
         api_adapter=api,
@@ -69,7 +70,7 @@ def test_chat_loop_runs_a_tool_and_answers_from_its_output(
 
     outcome = chat_loop(
         user_id=USER_ID,
-        thread_id="thread-1",
+        thread_id=THREAD_ID,
         message="Do I have a note about FastAPI?",
         jwt=token,
         api_adapter=api,
@@ -114,7 +115,7 @@ def test_the_tool_schemas_come_from_the_registry(
 
     chat_loop(
         user_id=USER_ID,
-        thread_id="thread-1",
+        thread_id=THREAD_ID,
         message="How many notes do I have?",
         jwt=token,
         api_adapter=api,
@@ -139,7 +140,7 @@ def test_chat_loop_chains_two_tool_calls(
 
     outcome = chat_loop(
         user_id=USER_ID,
-        thread_id="thread-1",
+        thread_id=THREAD_ID,
         message=(
             "I have a note somewhere with a bunch of groceries, "
             "could you tell me the total cost?"
@@ -186,7 +187,7 @@ def test_the_trajectory_records_every_step_and_derives_the_history(
 
     outcome = chat_loop(
         user_id=USER_ID,
-        thread_id="thread-1",
+        thread_id=THREAD_ID,
         message=(
             "I have a note somewhere with a bunch of groceries, "
             "could you tell me the total cost?"
@@ -232,6 +233,46 @@ def test_the_trajectory_records_every_step_and_derives_the_history(
     assert outcome.result is outcome.trajectory[-1]
 
 
+def test_chat_loop_sends_prior_history_before_the_new_message(
+    api_adapter: APIAdapterFactory,
+    anthropic_client: AnthropicClientFactory,
+    context_builder: ContextBuilder,
+):
+    api = api_adapter("db_1", "test-secret")
+    client = anthropic_client("responses_1")
+    token = FakeTokenService.create_fake_token(USER_ID)
+
+    earlier: list[MessageParam] = [
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hi — how can I help?"},
+    ]
+
+    outcome = chat_loop(
+        user_id=USER_ID,
+        thread_id=THREAD_ID,
+        message="How many notes do I have?",
+        jwt=token,
+        api_adapter=api,
+        anthropic_client=cast(Anthropic, client),
+        context_builder=context_builder,
+        tool_registry=create_tool_registry(api),
+        history=earlier,
+    )
+
+    sent = client.messages.calls[0]["messages"]
+    assert sent[:2] == earlier
+    assert sent[2]["content"] == "How many notes do I have?"
+
+    # The run's own record covers this turn only: the caller already holds
+    # what came before, so returning it again would duplicate it in the store.
+    first = outcome.trajectory[0]
+    assert isinstance(first, ModelResult)
+    assert conversation_history(outcome.trajectory) == [
+        {"role": "user", "content": "How many notes do I have?"},
+        first.received,
+    ]
+
+
 def test_chat_loop_rejects_a_truncated_response(
     api_adapter: APIAdapterFactory,
     anthropic_client: AnthropicClientFactory,
@@ -244,7 +285,7 @@ def test_chat_loop_rejects_a_truncated_response(
     with pytest.raises(ResponseTruncated):
         chat_loop(
             user_id=USER_ID,
-            thread_id="thread-1",
+            thread_id=THREAD_ID,
             message="Summarise all my notes in detail.",
             jwt=token,
             api_adapter=api,
@@ -270,7 +311,7 @@ def test_chat_loop_gives_up_after_max_iterations(
     with pytest.raises(MaxIterationsExceeded):
         chat_loop(
             user_id=USER_ID,
-            thread_id="thread-1",
+            thread_id=THREAD_ID,
             message="Do I have a note about FastAPI?",
             jwt=token,
             api_adapter=api,

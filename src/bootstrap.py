@@ -8,10 +8,12 @@ from fastapi import Request
 from src.adapters.security.jwt_token_service import JWTTokenService
 from src.chatbot.context.context_block import SystemPromptBlock, ToolsBlock
 from src.chatbot.context.context_builder import ContextBuilder
+from src.chatbot.threads.thread_store import ThreadStore
 
 ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
 AnthropicClientDependency: TypeAlias = Callable[[Request], Anthropic]
 TokenServiceDependency: TypeAlias = Callable[[Request], JWTTokenService]
+ThreadStoreDependency: TypeAlias = Callable[[Request], ThreadStore]
 
 
 def create_context_builder() -> ContextBuilder:
@@ -43,10 +45,16 @@ def create_token_service() -> JWTTokenService:
     return JWTTokenService(signing_key)
 
 
+def create_thread_store() -> ThreadStore:
+    """One store for the whole process, so threads outlive a single request."""
+    return ThreadStore()
+
+
 def setup_dependencies(app):
     app.state.context_builder = create_context_builder()
     app.state.anthropic_client = create_anthropic_client()
     app.state.token_service = create_token_service()
+    app.state.thread_store = create_thread_store()
 
 
 def get_context_builder() -> ContextBuilderDependency:
@@ -66,5 +74,12 @@ def get_anthropic_client() -> AnthropicClientDependency:
 def get_token_service() -> TokenServiceDependency:
     def _get(request: Request) -> JWTTokenService:
         return request.app.state.token_service
+
+    return _get
+
+
+def get_thread_store() -> ThreadStoreDependency:
+    def _get(request: Request) -> ThreadStore:
+        return request.app.state.thread_store
 
     return _get
