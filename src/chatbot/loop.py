@@ -1,4 +1,5 @@
 from anthropic import Anthropic
+from anthropic.types import MessageParam
 
 from src.adapters.api.api_adapter import APIAdapter
 from src.chatbot.context.context_builder import ContextBuilder
@@ -12,25 +13,28 @@ from src.chatbot.loop_result import (
     ToolResult,
 )
 from src.chatbot.loop_step import ActionStep, LoopContext, LoopStep, ModelStep
+from src.chatbot.threads.thread_store import ThreadID
 from src.chatbot.tools.registry import ToolRegistry
 from src.domain.user import Token, UserID
 
 
 def chat_loop(
     user_id: UserID,
-    thread_id: str,
+    thread_id: ThreadID,
     message: str,
     jwt: Token,
     api_adapter: "APIAdapter",
     anthropic_client: Anthropic,
     context_builder: ContextBuilder,
     tool_registry: ToolRegistry,
+    history: list[MessageParam] | None = None,
     max_iterations: int = 10,
 ) -> LoopOutcome:
     context = LoopContext(
         user_id=user_id,
         thread_id=thread_id,
         jwt=jwt,
+        history=history or [],
         trajectory=[],
         api_adapter=api_adapter,
         anthropic_client=anthropic_client,

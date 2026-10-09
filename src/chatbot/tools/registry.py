@@ -5,11 +5,12 @@ from typing import Callable, TypeAlias
 from anthropic.types import ToolParam
 
 from src.adapters.api.api_adapter import APIAdapter
+from src.chatbot.threads.thread_store import ThreadID
 from src.chatbot.tools.get_notes import GetNotes
 from src.chatbot.tools.tool import Tool
 from src.domain.user import Token, UserID
 
-ToolConstructor: TypeAlias = Callable[[UserID, str, Token], Tool]
+ToolConstructor: TypeAlias = Callable[[UserID, ThreadID, Token], Tool]
 
 
 @dataclass(frozen=True)

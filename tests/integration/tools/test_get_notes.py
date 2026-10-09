@@ -7,7 +7,7 @@ from tests.integration.fakes.fake_token_service import FakeTokenService
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 UNKNOWN_USER_ID = UUID("00000000-0000-0000-0000-000000000000")
-THREAD_ID = "thread-1"
+THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
 
 
 def test_get_notes_renders_the_notes_of_the_token_user(api_adapter: APIAdapterFactory):

@@ -17,6 +17,7 @@ from src.chatbot.loop_result import (
     Trajectory,
     conversation_history,
 )
+from src.chatbot.threads.thread_store import ThreadID
 from src.chatbot.tools.registry import ToolRegistry
 from src.domain.user import Token, UserID
 
@@ -27,8 +28,9 @@ MAX_TOKENS = 1024
 @dataclass
 class LoopContext:
     user_id: UserID
-    thread_id: str
+    thread_id: ThreadID
     jwt: Token
+    history: list[MessageParam]
     trajectory: Trajectory
     api_adapter: "APIAdapter"
     anthropic_client: Anthropic
@@ -55,7 +57,11 @@ class ModelStep(LoopStep):
             model=MODEL,
             max_tokens=MAX_TOKENS,
             system=context.context_builder.build_context(),
-            messages=[*conversation_history(context.trajectory), self.message],
+            messages=[
+                *context.history,
+                *conversation_history(context.trajectory),
+                self.message,
+            ],
             tools=[tool.schema for tool in context.tool_registry.values()],
         )
 
