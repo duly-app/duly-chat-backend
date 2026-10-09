@@ -32,10 +32,17 @@ def get_token_service() -> JWTTokenService:
 
 
 def get_api_adapter(
+    request: Request,
     token_service: JWTTokenService = Depends(get_token_service),
 ) -> DulyAPI:
     service_uri = os.getenv("DULY_SERVICE_URI", "http://localhost:8001")
-    return DulyAPI(service_uri, token_service)
+
+    return DulyAPI(
+        service_uri,
+        token_service,
+        request.app.state.service_token_service,
+        request.app.state.http_client,
+    )
 
 
 @app.post("/threads/{thread_id}/messages")

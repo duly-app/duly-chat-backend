@@ -2,10 +2,12 @@ import os
 from pathlib import Path
 from typing import Callable, TypeAlias
 
+import requests
 from anthropic import Anthropic
 from fastapi import Request
 
 from src.adapters.security.jwt_token_service import JWTTokenService
+from src.adapters.security.service_token_service import ServiceTokenService
 from src.chatbot.context.context_block import SystemPromptBlock, ToolsBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
@@ -14,6 +16,8 @@ ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
 AnthropicClientDependency: TypeAlias = Callable[[Request], Anthropic]
 TokenServiceDependency: TypeAlias = Callable[[Request], JWTTokenService]
 ThreadStoreDependency: TypeAlias = Callable[[Request], ThreadStore]
+ServiceTokenServiceDependency: TypeAlias = Callable[[Request], ServiceTokenService]
+HTTPClientDependency: TypeAlias = Callable[[Request], requests.Session]
 
 
 def create_context_builder() -> ContextBuilder:
@@ -45,6 +49,22 @@ def create_token_service() -> JWTTokenService:
     return JWTTokenService(signing_key)
 
 
+def create_http_client() -> requests.Session:
+    """One session for the process, so connections to the notes service are
+    pooled rather than re-handshaked on every request.
+    """
+    return requests.Session()
+
+
+def create_service_token_service() -> ServiceTokenService:
+    service_key = os.getenv("SERVICE_KEY")
+    if not service_key:
+        raise RuntimeError("SERVICE_KEY environment variable not set")
+    if service_key == os.getenv("SIGNING_KEY"):
+        raise RuntimeError("SERVICE_KEY must not be the same as SIGNING_KEY")
+    return ServiceTokenService(service_key)
+
+
 def create_thread_store() -> ThreadStore:
     """One store for the whole process, so threads outlive a single request."""
     return ThreadStore()
@@ -55,6 +75,8 @@ def setup_dependencies(app):
     app.state.anthropic_client = create_anthropic_client()
     app.state.token_service = create_token_service()
     app.state.thread_store = create_thread_store()
+    app.state.service_token_service = create_service_token_service()
+    app.state.http_client = create_http_client()
 
 
 def get_context_builder() -> ContextBuilderDependency:
@@ -81,5 +103,19 @@ def get_token_service() -> TokenServiceDependency:
 def get_thread_store() -> ThreadStoreDependency:
     def _get(request: Request) -> ThreadStore:
         return request.app.state.thread_store
+
+    return _get
+
+
+def get_service_token_service() -> ServiceTokenServiceDependency:
+    def _get(request: Request) -> ServiceTokenService:
+        return request.app.state.service_token_service
+
+    return _get
+
+
+def get_http_client() -> HTTPClientDependency:
+    def _get(request: Request) -> requests.Session:
+        return request.app.state.http_client
 
     return _get
