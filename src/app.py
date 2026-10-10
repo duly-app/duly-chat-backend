@@ -21,6 +21,12 @@ class ChatRequest(BaseModel):
     message: str
 
 
+class ChatResponse(BaseModel):
+    thread_id: UUID
+    message: str
+    token_usage: int
+
+
 security = HTTPBearer()
 
 
@@ -42,7 +48,7 @@ def get_api_adapter(
     )
 
 
-@router.post("/threads/{thread_id}/messages")
+@router.post("/threads/{thread_id}/messages", response_model=ChatResponse)
 async def chat(
     thread_id: UUID,
     body: ChatRequest,
@@ -76,11 +82,11 @@ async def chat(
 
         thread.extend(conversation_history(outcome.trajectory))
 
-    return {
-        "thread_id": str(thread_id),
-        "response": outcome.result,
-        "token_usage": outcome.usage.token_count,
-    }
+    return ChatResponse(
+        thread_id=thread_id,
+        message=outcome.answer,
+        token_usage=outcome.usage.token_count,
+    )
 
 
 @router.get("/health")

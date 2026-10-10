@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TypeAlias
 
-from anthropic.types import ContentBlock, MessageParam, ToolUseBlock
+from anthropic.types import ContentBlock, MessageParam, TextBlock, ToolUseBlock
 
 
 @dataclass(frozen=True)
@@ -48,6 +48,13 @@ class ModelResult:
     def tool_calls(self) -> list[ToolUseBlock]:
         return [block for block in self.content if isinstance(block, ToolUseBlock)]
 
+    @property
+    def text(self) -> str:
+        """The prose the model produced, without the tool-call blocks."""
+        return "".join(
+            block.text for block in self.content if isinstance(block, TextBlock)
+        )
+
 
 @dataclass(frozen=True)
 class ToolResult:
@@ -73,6 +80,16 @@ class LoopOutcome:
 
     trajectory: Trajectory
     usage: TokenUsage
+
+    @property
+    def answer(self) -> str:
+        """What to say back, with the narrowing done once rather than by callers.
+
+        Empty if the run ended on a tool step, which is_done rules out.
+        """
+        result = self.result
+
+        return result.text if isinstance(result, ModelResult) else ""
 
     @property
     def result(self) -> StepResult:
