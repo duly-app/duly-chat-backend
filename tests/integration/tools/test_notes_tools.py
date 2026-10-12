@@ -181,3 +181,13 @@ def test_the_registry_exposes_every_tool_with_a_usable_schema(
         assert registered.schema["name"] == name
         assert registered.schema["description"]
         assert registered.schema["input_schema"]["type"] == "object"
+
+
+def test_every_tool_declares_what_its_failure_means():
+    for tool_class in NOTES_TOOLS:
+        assert tool_class.error_response
+
+    # The write tools must not claim the write definitely didn't happen: a
+    # failure after the request was sent may still have landed.
+    for tool_class in (CreateNote, UpdateNote, DeleteNote):
+        assert "may or may not" in tool_class.error_response

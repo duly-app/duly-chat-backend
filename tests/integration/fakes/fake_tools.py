@@ -7,6 +7,7 @@ from src.chatbot.tools.tool import Tool
 class SumTool(Tool):
     name = "sum"
     description = "Add a list of numbers together and return the total."
+    error_response = "The numbers could not be added up."
     input_schema = {
         "type": "object",
         "properties": {

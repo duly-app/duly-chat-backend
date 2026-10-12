@@ -12,6 +12,9 @@ class Tool(ABC):
     description: ClassVar[str]
     input_schema: ClassVar[dict[str, Any]]
 
+    #: What the model is told when run() raises
+    error_response: ClassVar[str]
+
     def __init__(self, user_id: UserID, thread_id: ThreadID, jwt: Token):
         self.user_id = user_id
         self.thread_id = thread_id
@@ -28,7 +31,7 @@ class Tool(ABC):
         if abstract:
             return
 
-        for attr in ("name", "description", "input_schema"):
+        for attr in ("name", "description", "input_schema", "error_response"):
             if not getattr(cls, attr, None):
                 raise ValueError(f"{cls.__name__} must define {attr}")
 

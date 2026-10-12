@@ -12,6 +12,8 @@ class GetNote(NotesTool):
         "Read one of the user's notes in full, by the id shown in a list or "
         "search result."
     )
+    error_response = "Could not reach the notes service, so the note could not be read."
+
     input_schema = {
         "type": "object",
         "properties": {

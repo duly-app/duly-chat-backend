@@ -100,18 +100,37 @@ class ActionStep(LoopStep):
         tool_maker = context.tool_registry.get(call.name)
 
         if tool_maker is None:
-            # Reported back rather than raised, so the model can recover
-            return {
-                "type": "tool_result",
-                "tool_use_id": call.id,
-                "content": f"No such tool: {call.name}",
-                "is_error": True,
-            }
+            return self._failed(call, f"No such tool: {call.name}")
 
         tool = tool_maker.create(context.user_id, context.thread_id, context.jwt)
+
+        try:
+            content = tool.run(**dict(call.input))
+        except Exception as error:
+            # Every tool failure is reported to the model rather than raised.
+            # A broken tool is a fact about the world the model can act on —
+            # explain it, try another route, or stop
+            #
+            # Only the exception's type, not its message: a requests error
+            # carries the internal service URL
+            return self._failed(call, f"{tool.error_response} ({type(error).__name__})")
+
+        if not content:
+            # The API rejects empty content blocks, so an empty return would
+            # fail the turn at the API with nothing to point at.
+            return self._failed(call, f"{call.name} returned nothing.")
 
         return {
             "type": "tool_result",
             "tool_use_id": call.id,
-            "content": tool.run(**dict(call.input)),
+            "content": content,
+        }
+
+    @staticmethod
+    def _failed(call: ToolUseBlock, content: str) -> ToolResultBlockParam:
+        return {
+            "type": "tool_result",
+            "tool_use_id": call.id,
+            "content": content,
+            "is_error": True,
         }

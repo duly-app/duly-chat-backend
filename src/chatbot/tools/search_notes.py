@@ -11,6 +11,10 @@ class SearchNotes(NotesTool):
         "content. Matching is literal, so it will not find synonyms or "
         "paraphrases: try the words the user would have written down."
     )
+    error_response = (
+        "Could not reach the notes service, so the notes could not be searched."
+    )
+
     input_schema = {
         "type": "object",
         "properties": {

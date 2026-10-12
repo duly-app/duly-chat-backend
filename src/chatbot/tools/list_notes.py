@@ -11,6 +11,10 @@ class ListNotes(NotesTool):
         "call get_note for a note's full text. Prefer search_notes when the "
         "user is asking about a particular subject."
     )
+    error_response = (
+        "Could not reach the notes service, so the notes could not be listed."
+    )
+
     input_schema = {
         "type": "object",
         "properties": {
