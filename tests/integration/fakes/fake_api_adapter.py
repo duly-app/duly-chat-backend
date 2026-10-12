@@ -21,6 +21,9 @@ class FakeAPIAdapter(APIAdapter[FakeTokenService]):
     def get_notes_by_keyword(self, token: Token, keyword: str) -> list[Note]:
         return self._note_db.search(self.get_user_id(token), keyword)
 
+    def get_note(self, token: Token, note_id: NoteID) -> Note:
+        return self._note_db.get(self.get_user_id(token), note_id)
+
     def create_note(self, token: Token, title: str, content: str) -> Note:
         return self._note_db.add(self.get_user_id(token), title, content)
 

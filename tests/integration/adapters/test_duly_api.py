@@ -31,7 +31,11 @@ NOTE_RESPONSE = {
 
 @pytest.fixture
 def http() -> FakeHTTPClient:
-    return FakeHTTPClient(payload=NOTE_RESPONSE, collection_payload=[NOTE_RESPONSE])
+    # Collections come back wrapped, as duly-backend's /notes does. A bare
+    # list here is what let a broken get_notes pass its tests.
+    return FakeHTTPClient(
+        payload=NOTE_RESPONSE, collection_payload={"notes": [NOTE_RESPONSE]}
+    )
 
 
 @pytest.fixture

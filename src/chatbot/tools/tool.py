@@ -17,8 +17,16 @@ class Tool(ABC):
         self.thread_id = thread_id
         self.jwt = jwt
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, abstract: bool = False, **kwargs):
+        """Check that a concrete tool declares what the API needs from it.
+
+        A shared base passes abstract=True: it has no name of its own, and
+        would otherwise fail this check at import time.
+        """
         super().__init_subclass__(**kwargs)
+
+        if abstract:
+            return
 
         for attr in ("name", "description", "input_schema"):
             if not getattr(cls, attr, None):

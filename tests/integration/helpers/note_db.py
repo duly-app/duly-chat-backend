@@ -73,6 +73,9 @@ class NoteDB:
             if needle in fn.title.lower() or needle in fn.content.lower()
         ]
 
+    def get(self, user_id: UserID, note_id: UUID) -> Note:
+        return self._owned_note(user_id, note_id).to_note()
+
     def add(self, user_id: UserID, title: str, content: str) -> Note:
         note = FullNote(
             id=uuid4(),

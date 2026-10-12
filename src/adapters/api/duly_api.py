@@ -54,7 +54,7 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         )
         response.raise_for_status()
 
-        return [self._to_note(note_data) for note_data in response.json()]
+        return [self._to_note(note_data) for note_data in response.json()["notes"]]
 
     def get_notes_by_keyword(self, token: Token, keyword: str) -> list[Note]:
         response = self._http.get(
@@ -64,7 +64,17 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         )
         response.raise_for_status()
 
-        return [self._to_note(note_data) for note_data in response.json()]
+        # Wrapped in "notes", matching the list endpoint. The route does not
+        # exist in duly-backend yet, so this is a convention, not a contract.
+        return [self._to_note(note_data) for note_data in response.json()["notes"]]
+
+    def get_note(self, token: Token, note_id: NoteID) -> Note:
+        response = self._http.get(
+            f"{self._service_uri}/notes/{note_id}", headers=self._headers(token)
+        )
+        response.raise_for_status()
+
+        return self._to_note(response.json())
 
     def create_note(self, token: Token, title: str, content: str) -> Note:
         response = self._http.post(

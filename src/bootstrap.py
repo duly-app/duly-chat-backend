@@ -7,7 +7,7 @@ from fastapi import Request
 
 from src.adapters.security.jwt_token_service import JWTTokenService
 from src.adapters.security.service_token_service import ServiceTokenService
-from src.chatbot.context.context_block import SystemPromptBlock, ToolsBlock
+from src.chatbot.context.context_block import SystemPromptBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
 from src.env import ANTHROPIC_API_KEY, SERVICE_KEY, SIGNING_KEY, Env
@@ -30,10 +30,7 @@ def create_context_builder() -> ContextBuilder:
     system_block = SystemPromptBlock()
     system_block.load_content(str(context_dir / "system_template.txt"))
 
-    tools_block = ToolsBlock()
-    tools_block.load_content(str(context_dir / "tools_template.txt"))
-
-    return ContextBuilder([system_block, tools_block])
+    return ContextBuilder([system_block])
 
 
 def create_anthropic_client(env: Env) -> Anthropic:

@@ -17,8 +17,5 @@ class ContextBuilder:
     def get_system_prompt(self, **kwargs) -> str:
         return self._get_block(BlockType.SYSTEM).render(**kwargs)
 
-    def get_tools_context(self, **kwargs) -> str:
-        return self._get_block(BlockType.TOOLS).render(**kwargs)
-
     def build_context(self, **kwargs) -> str:
         return "\n\n".join(block.render(**kwargs) for block in self.blocks)

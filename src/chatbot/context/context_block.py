@@ -46,12 +46,3 @@ class SystemPromptBlock(ContextBlock):
         self, content: str, sub_blocks: list["ContextBlock"] | None, **kwargs
     ) -> str:
         return content.format(**kwargs)
-
-
-class ToolsBlock(ContextBlock):
-    block_type = BlockType.TOOLS
-
-    def _render(
-        self, content: str, sub_blocks: list["ContextBlock"] | None, **kwargs
-    ) -> str:
-        return content

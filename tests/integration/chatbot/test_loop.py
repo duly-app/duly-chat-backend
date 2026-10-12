@@ -55,8 +55,10 @@ def test_chat_loop_returns_assistant_answer_on_end_turn(
     assert len(client.messages.calls) == 1
 
     system = client.messages.calls[0]["system"]
-    assert "note-taking app called Duly" in system
-    assert "## get_notes" in system
+    assert "note-taking app" in system
+
+    # Tools are declared through the tools parameter, not described in prose.
+    assert "list_notes" not in system
 
 
 def test_chat_loop_runs_a_tool_and_answers_from_its_output(
@@ -126,7 +128,15 @@ def test_the_tool_schemas_come_from_the_registry(
 
     tools = client.messages.calls[0]["tools"]
 
-    assert [tool["name"] for tool in tools] == ["get_notes", "sum"]
+    assert [tool["name"] for tool in tools] == [
+        "list_notes",
+        "search_notes",
+        "get_note",
+        "create_note",
+        "update_note",
+        "delete_note",
+        "sum",
+    ]
 
 
 def test_chat_loop_chains_two_tool_calls(
@@ -212,7 +222,7 @@ def test_the_trajectory_records_every_step_and_derives_the_history(
         for step in outcome.trajectory
         if isinstance(step, ModelResult)
         for call in step.tool_calls
-    ] == ["get_notes", "sum"]
+    ] == ["list_notes", "sum"]
 
     # Only the model steps put messages on the wire; a tool result reaches the
     # model as the next step's sent message, so ToolResult contributes nothing.
@@ -323,3 +333,32 @@ def test_chat_loop_gives_up_after_max_iterations(
 
     # It stopped after the tool ran rather than calling the model again.
     assert len(client.messages.calls) == 1
+
+
+def test_the_outcomes_answer_is_the_models_prose_without_tool_blocks(
+    api_adapter: APIAdapterFactory,
+    anthropic_client: AnthropicClientFactory,
+    context_builder: ContextBuilder,
+):
+    api = api_adapter("db_1", "test-secret")
+    client = anthropic_client("responses_2")
+    token = FakeTokenService.create_fake_token(USER_ID)
+
+    outcome = chat_loop(
+        user_id=USER_ID,
+        thread_id=THREAD_ID,
+        message="Do I have a note about FastAPI?",
+        jwt=token,
+        api_adapter=api,
+        anthropic_client=cast(Anthropic, client),
+        context_builder=context_builder,
+        tool_registry=create_tool_registry(api),
+    )
+
+    # A plain string, so the client never parses content blocks or sees the
+    # tool_use arguments that reached the model earlier in the turn.
+    assert outcome.answer.startswith("Yes — your FastAPI patterns note")
+
+    first = outcome.trajectory[0]
+    assert isinstance(first, ModelResult)
+    assert first.tool_calls and first.text == ""

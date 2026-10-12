@@ -24,6 +24,10 @@ class APIAdapter(ABC, Generic[TokenServiceT]):
         raise NotImplementedError
 
     @abstractmethod
+    def get_note(self, token: Token, note_id: NoteID) -> Note:
+        raise NotImplementedError
+
+    @abstractmethod
     def create_note(self, token: Token, title: str, content: str) -> Note:
         raise NotImplementedError
 

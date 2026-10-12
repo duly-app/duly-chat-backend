@@ -10,7 +10,7 @@
                 {
                     "type": "tool_use",
                     "id": "toolu_01",
-                    "name": "get_notes",
+                    "name": "list_notes",
                     "input": {}
                 }
             ],

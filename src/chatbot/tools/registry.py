@@ -6,11 +6,26 @@ from anthropic.types import ToolParam
 
 from src.adapters.api.api_adapter import APIAdapter
 from src.chatbot.threads.thread_store import ThreadID
-from src.chatbot.tools.get_notes import GetNotes
+from src.chatbot.tools.create_note import CreateNote
+from src.chatbot.tools.delete_note import DeleteNote
+from src.chatbot.tools.get_note import GetNote
+from src.chatbot.tools.list_notes import ListNotes
+from src.chatbot.tools.notes_tool import NotesTool
+from src.chatbot.tools.search_notes import SearchNotes
 from src.chatbot.tools.tool import Tool
+from src.chatbot.tools.update_note import UpdateNote
 from src.domain.user import Token, UserID
 
 ToolConstructor: TypeAlias = Callable[[UserID, ThreadID, Token], Tool]
+
+NOTES_TOOLS: tuple[type[NotesTool], ...] = (
+    ListNotes,
+    SearchNotes,
+    GetNote,
+    CreateNote,
+    UpdateNote,
+    DeleteNote,
+)
 
 
 @dataclass(frozen=True)
@@ -23,8 +38,10 @@ ToolRegistry: TypeAlias = dict[str, RegisteredTool]
 
 
 def create_tool_registry(api_adapter: APIAdapter) -> ToolRegistry:
+    """The tools this app offers, each with the app-scoped adapter curried in."""
     return {
-        GetNotes.name: RegisteredTool(
-            schema=GetNotes.schema(), create=partial(GetNotes, api_adapter)
-        ),
+        tool.name: RegisteredTool(
+            schema=tool.schema(), create=partial(tool, api_adapter)
+        )
+        for tool in NOTES_TOOLS
     }

@@ -22,7 +22,7 @@ from src.chatbot.tools.registry import ToolRegistry
 from src.domain.user import Token, UserID
 
 MODEL = "claude-opus-5"
-MAX_TOKENS = 1024
+MAX_TOKENS = 4096
 
 
 @dataclass
