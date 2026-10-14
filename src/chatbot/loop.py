@@ -13,8 +13,9 @@ from src.chatbot.loop_result import (
     ToolResult,
 )
 from src.chatbot.loop_step import ActionStep, LoopContext, LoopStep, ModelStep
-from src.chatbot.threads.thread_store import ThreadID
+from src.chatbot.threads.thread_store import ThreadID, TurnID, new_turn_id
 from src.chatbot.tools.registry import ToolRegistry
+from src.chatbot.trace import log_step
 from src.domain.user import Token, UserID
 
 
@@ -28,11 +29,15 @@ def chat_loop(
     context_builder: ContextBuilder,
     tool_registry: ToolRegistry,
     history: list[MessageParam] | None = None,
+    turn_id: TurnID | None = None,
     max_iterations: int = 10,
 ) -> LoopOutcome:
+    turn = turn_id or new_turn_id()
+
     context = LoopContext(
         user_id=user_id,
         thread_id=thread_id,
+        turn_id=turn,
         jwt=jwt,
         history=history or [],
         trajectory=[],
@@ -45,12 +50,13 @@ def chat_loop(
     total_usage = TokenUsage()
     result: StepResult | None = None
 
-    for _ in range(max_iterations):
+    for idx in range(max_iterations):
         step = get_next_step(result, message)
         result, usage = step.execute(context)
         total_usage += usage
 
         context.trajectory.append(result)
+        log_step(turn, user_id, thread_id, idx, result)
 
         if is_truncated(result):
             raise ResponseTruncated()

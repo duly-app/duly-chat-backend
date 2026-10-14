@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Generator, TypeAlias
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from anthropic.types import MessageParam
 from cachetools import TTLCache
@@ -10,9 +10,14 @@ from cachetools import TTLCache
 from src.domain.user import UserID
 
 ThreadID: TypeAlias = UUID
+TurnID: TypeAlias = UUID
 
 DEFAULT_TTL = timedelta(hours=12)
 DEFAULT_MAX_THREADS_PER_USER = 50
+
+
+def new_turn_id() -> TurnID:
+    return uuid4()
 
 
 @dataclass

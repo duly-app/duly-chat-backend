@@ -14,6 +14,7 @@ from tests.integration.fakes.fake_token_service import FakeTokenService
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
+TURN_ID = UUID("550e8400-e29b-41d4-a716-4466554400bb")
 
 
 class Exploding(NotesTool):
@@ -48,6 +49,7 @@ def context(api_adapter: APIAdapterFactory) -> LoopContext:
     return LoopContext(
         user_id=USER_ID,
         thread_id=THREAD_ID,
+        turn_id=TURN_ID,
         jwt=FakeTokenService.create_fake_token(USER_ID),
         history=[],
         trajectory=[],

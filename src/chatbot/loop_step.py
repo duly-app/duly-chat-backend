@@ -17,7 +17,7 @@ from src.chatbot.loop_result import (
     Trajectory,
     conversation_history,
 )
-from src.chatbot.threads.thread_store import ThreadID
+from src.chatbot.threads.thread_store import ThreadID, TurnID
 from src.chatbot.tools.registry import ToolRegistry
 from src.domain.user import Token, UserID
 
@@ -29,6 +29,7 @@ MAX_TOKENS = 4096
 class LoopContext:
     user_id: UserID
     thread_id: ThreadID
+    turn_id: TurnID
     jwt: Token
     history: list[MessageParam]
     trajectory: Trajectory

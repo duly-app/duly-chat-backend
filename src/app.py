@@ -13,9 +13,9 @@ from src.adapters.security.jwt_token_service import JWTTokenService
 from src.bootstrap import setup_dependencies
 from src.chatbot.loop import chat_loop
 from src.chatbot.loop_result import conversation_history
-from src.chatbot.threads.thread_store import record_turn
+from src.chatbot.threads.thread_store import new_turn_id, record_turn
 from src.chatbot.tools.registry import create_tool_registry
-from src.chatbot.trace import log_turn
+from src.chatbot.trace import log_turn, log_turn_failed
 from src.env import DULY_SERVICE_URI, Env, OSEnv
 
 router = APIRouter()
@@ -70,24 +70,38 @@ async def chat(
         )
 
     user_id = UUID(payload["sub"])
+    turn_id = new_turn_id()
     started = perf_counter()
 
-    with record_turn(request.app.state.thread_store, user_id, thread_id) as thread:
-        outcome = chat_loop(
+    try:
+        with record_turn(request.app.state.thread_store, user_id, thread_id) as thread:
+            outcome = chat_loop(
+                user_id=user_id,
+                thread_id=thread_id,
+                message=body.message,
+                jwt=credentials.credentials,
+                api_adapter=api_adapter,
+                anthropic_client=request.app.state.anthropic_client,
+                context_builder=request.app.state.context_builder,
+                tool_registry=create_tool_registry(api_adapter),
+                history=thread.messages,
+                turn_id=turn_id,
+            )
+
+            thread.extend(conversation_history(outcome.trajectory))
+    except Exception as error:
+        log_turn_failed(
+            turn_id=turn_id,
             user_id=user_id,
             thread_id=thread_id,
-            message=body.message,
-            jwt=credentials.credentials,
-            api_adapter=api_adapter,
-            anthropic_client=request.app.state.anthropic_client,
-            context_builder=request.app.state.context_builder,
-            tool_registry=create_tool_registry(api_adapter),
-            history=thread.messages,
+            prompt=body.message,
+            error=error,
+            seconds=perf_counter() - started,
         )
-
-        thread.extend(conversation_history(outcome.trajectory))
+        raise
 
     log_turn(
+        turn_id=turn_id,
         user_id=user_id,
         thread_id=thread_id,
         prompt=body.message,
