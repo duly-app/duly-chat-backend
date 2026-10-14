@@ -10,7 +10,8 @@ from src.adapters.security.service_token_service import ServiceTokenService
 from src.chatbot.context.context_block import SystemPromptBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
-from src.env import ANTHROPIC_API_KEY, SERVICE_KEY, SIGNING_KEY, Env
+from src.env import ANTHROPIC_API_KEY, LOG_LEVEL, SERVICE_KEY, SIGNING_KEY, Env
+from src.logs import configure as configure_logging
 
 ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
 AnthropicClientDependency: TypeAlias = Callable[[Request], Anthropic]
@@ -60,6 +61,8 @@ def create_thread_store() -> ThreadStore:
 def setup_dependencies(app, env: Env) -> None:
     """Validate the environment before building anything that depends on it."""
     env.validate()
+
+    configure_logging(env[LOG_LEVEL])
 
     app.state.env = env
     app.state.context_builder = create_context_builder()

@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
+from time import perf_counter
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from prometheus_client import CollectorRegistry
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 from src.adapters.api.duly_api import DulyAPI
@@ -12,6 +15,7 @@ from src.chatbot.loop import chat_loop
 from src.chatbot.loop_result import conversation_history
 from src.chatbot.threads.thread_store import record_turn
 from src.chatbot.tools.registry import create_tool_registry
+from src.chatbot.trace import log_turn
 from src.env import DULY_SERVICE_URI, Env, OSEnv
 
 router = APIRouter()
@@ -66,6 +70,7 @@ async def chat(
         )
 
     user_id = UUID(payload["sub"])
+    started = perf_counter()
 
     with record_turn(request.app.state.thread_store, user_id, thread_id) as thread:
         outcome = chat_loop(
@@ -81,6 +86,14 @@ async def chat(
         )
 
         thread.extend(conversation_history(outcome.trajectory))
+
+    log_turn(
+        user_id=user_id,
+        thread_id=thread_id,
+        prompt=body.message,
+        outcome=outcome,
+        seconds=perf_counter() - started,
+    )
 
     return ChatResponse(
         thread_id=thread_id,
@@ -104,8 +117,21 @@ def create_app(env: Env | None = None) -> FastAPI:
 
     application = FastAPI(title="Duly Chat Backend", lifespan=lifespan)
     application.include_router(router)
+    register_metrics(application)
 
     return application
+
+
+def register_metrics(application: FastAPI) -> None:
+    """Exposes /metrics for Prometheus to scrape.
+
+    The handler label is the route template, so the thread id in the path does
+    not leak into the label set. The registry is per app rather than the
+    process-wide default one, so building several apps in a test run doesn't
+    collide on already-registered metrics.
+    """
+    instrumentator = Instrumentator(registry=CollectorRegistry())
+    instrumentator.instrument(application).expose(application)
 
 
 app = create_app()
