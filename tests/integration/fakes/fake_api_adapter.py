@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from src.adapters.api.api_adapter import APIAdapter
 from src.domain.notes import Note, NoteID
 from src.domain.user import Token
@@ -15,8 +17,21 @@ class FakeAPIAdapter(APIAdapter[FakeTokenService]):
 
         super().__init__(token_service)
 
-    def get_notes(self, token: Token) -> list[Note]:
-        return self._note_db.get_notes_by_user(self.get_user_id(token))
+    def get_notes(
+        self,
+        token: Token,
+        order_by: str | None = None,
+        descending: bool = True,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> list[Note]:
+        return self._note_db.get_notes_by_user(
+            self.get_user_id(token),
+            order_by=order_by or "last_updated",
+            descending=descending,
+            updated_after=updated_after,
+            updated_before=updated_before,
+        )
 
     def get_notes_by_keyword(self, token: Token, keyword: str) -> list[Note]:
         return self._note_db.search(self.get_user_id(token), keyword)

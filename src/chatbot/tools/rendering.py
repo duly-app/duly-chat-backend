@@ -38,7 +38,7 @@ def render_notes(notes: list[Note], limit: int) -> str:
 
 def render_note(note: Note) -> str:
     """One note in full, for when a preview isn't enough."""
-    return f"# {note.title} (id: {note.id})\n{note.content}"
+    return f"{_heading(note)}\n{note.content}"
 
 
 def _preview(note: Note) -> str:
@@ -47,4 +47,12 @@ def _preview(note: Note) -> str:
     if len(content) > PREVIEW_LENGTH:
         content = content[:PREVIEW_LENGTH].rstrip() + "…"
 
-    return f"# {note.title} (id: {note.id})\n{content}"
+    return f"{_heading(note)}\n{content}"
+
+
+def _heading(note: Note) -> str:
+    """Title, id and when it last changed."""
+    return (
+        f"# {note.title} "
+        f"(id: {note.id}, updated: {note.last_updated.date().isoformat()})"
+    )

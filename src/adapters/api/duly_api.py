@@ -48,9 +48,29 @@ class DulyAPI(APIAdapter[JWTTokenService]):
 
         super().__init__(token_service)
 
-    def get_notes(self, token: Token) -> list[Note]:
+    def get_notes(
+        self,
+        token: Token,
+        order_by: str | None = None,
+        descending: bool = True,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> list[Note]:
+        params: dict[str, str] = {"direction": "desc" if descending else "asc"}
+
+        if order_by:
+            params["order_by"] = order_by
+
+        if updated_after:
+            params["updated_after"] = updated_after.isoformat()
+
+        if updated_before:
+            params["updated_before"] = updated_before.isoformat()
+
         response = self._http.get(
-            f"{self._service_uri}/notes", headers=self._headers(token)
+            f"{self._service_uri}/notes",
+            headers=self._headers(token),
+            params=params,
         )
         response.raise_for_status()
 
@@ -64,8 +84,6 @@ class DulyAPI(APIAdapter[JWTTokenService]):
         )
         response.raise_for_status()
 
-        # Wrapped in "notes", matching the list endpoint. The route does not
-        # exist in duly-backend yet, so this is a convention, not a contract.
         return [self._to_note(note_data) for note_data in response.json()["notes"]]
 
     def get_note(self, token: Token, note_id: NoteID) -> Note:
@@ -127,14 +145,11 @@ class DulyAPI(APIAdapter[JWTTokenService]):
 
     @staticmethod
     def _to_note(data: dict[str, Any]) -> Note:
-        """Narrow a serialized note down to what this service models.
-
-        The API also sends last_updated and last_author_type, and sends the id
-        and timestamps as strings, so the fields can't be splatted straight in.
-        """
+        """Narrow a serialized note down to what this service models."""
         return Note(
             id=UUID(data["id"]),
             title=data["title"],
             content=data["content"],
             created_at=datetime.fromisoformat(data["created_at"]),
+            last_updated=datetime.fromisoformat(data["last_updated"]),
         )

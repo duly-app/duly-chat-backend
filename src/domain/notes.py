@@ -12,3 +12,4 @@ class Note:
     title: str
     content: str
     created_at: datetime
+    last_updated: datetime

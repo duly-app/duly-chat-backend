@@ -98,7 +98,7 @@ def _step_fields(result: StepResult) -> dict[str, Any]:
         return {
             "kind": "model",
             "stop_reason": result.stop_reason.value,
-            "text": result.text,    # The prose between tool calls
+            "text": result.text,  # The prose between tool calls
             "tools": [
                 {
                     "id": call.id,

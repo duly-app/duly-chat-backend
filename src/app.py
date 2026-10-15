@@ -83,7 +83,9 @@ async def chat(
                 api_adapter=api_adapter,
                 anthropic_client=request.app.state.anthropic_client,
                 context_builder=request.app.state.context_builder,
-                tool_registry=create_tool_registry(api_adapter),
+                tool_registry=create_tool_registry(
+                    api_adapter, request.app.state.timezone
+                ),
                 history=thread.messages,
                 turn_id=turn_id,
             )
