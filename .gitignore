@@ -18,3 +18,8 @@ dist/
 
 # --- tox --- #
 .tox
+
+# --- coverage --- #
+.coverage
+coverage.xml
+htmlcov

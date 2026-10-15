@@ -1,6 +1,7 @@
 # Duly Chat Backend
 
 [![Checks](https://github.com/duly-app/duly-chat-backend/actions/workflows/pr-checks.yml/badge.svg?branch=main)](https://github.com/duly-app/duly-chat-backend/actions/workflows/pr-checks.yml)
+[![Coverage](https://raw.githubusercontent.com/duly-app/duly-chat-backend/python-coverage-comment-action-data/badge.svg)](https://github.com/duly-app/duly-chat-backend/tree/python-coverage-comment-action-data)
 
 This repository is the chatbot backend of the Duly app. It runs on FastAPI.
 

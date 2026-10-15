@@ -1,10 +1,8 @@
 from pathlib import Path
-from typing import Callable, TypeAlias
 from zoneinfo import ZoneInfo
 
 import requests
 from anthropic import Anthropic
-from fastapi import Request
 
 from src.adapters.security.jwt_token_service import JWTTokenService
 from src.adapters.security.service_token_service import ServiceTokenService
@@ -20,14 +18,6 @@ from src.env import (
     Env,
 )
 from src.logs import configure as configure_logging
-
-ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
-AnthropicClientDependency: TypeAlias = Callable[[Request], Anthropic]
-TokenServiceDependency: TypeAlias = Callable[[Request], JWTTokenService]
-ThreadStoreDependency: TypeAlias = Callable[[Request], ThreadStore]
-ServiceTokenServiceDependency: TypeAlias = Callable[[Request], ServiceTokenService]
-HTTPClientDependency: TypeAlias = Callable[[Request], requests.Session]
-EnvDependency: TypeAlias = Callable[[Request], Env]
 
 
 def create_context_builder() -> ContextBuilder:
@@ -80,52 +70,3 @@ def setup_dependencies(app, env: Env) -> None:
     app.state.service_token_service = create_service_token_service(env)
     app.state.http_client = create_http_client()
     app.state.timezone = ZoneInfo(env[TIMEZONE])
-
-
-def get_context_builder() -> ContextBuilderDependency:
-    def _get(request: Request) -> ContextBuilder:
-        return request.app.state.context_builder
-
-    return _get
-
-
-def get_anthropic_client() -> AnthropicClientDependency:
-    def _get(request: Request) -> Anthropic:
-        return request.app.state.anthropic_client
-
-    return _get
-
-
-def get_token_service() -> TokenServiceDependency:
-    def _get(request: Request) -> JWTTokenService:
-        return request.app.state.token_service
-
-    return _get
-
-
-def get_thread_store() -> ThreadStoreDependency:
-    def _get(request: Request) -> ThreadStore:
-        return request.app.state.thread_store
-
-    return _get
-
-
-def get_service_token_service() -> ServiceTokenServiceDependency:
-    def _get(request: Request) -> ServiceTokenService:
-        return request.app.state.service_token_service
-
-    return _get
-
-
-def get_http_client() -> HTTPClientDependency:
-    def _get(request: Request) -> requests.Session:
-        return request.app.state.http_client
-
-    return _get
-
-
-def get_env() -> EnvDependency:
-    def _get(request: Request) -> Env:
-        return request.app.state.env
-
-    return _get
