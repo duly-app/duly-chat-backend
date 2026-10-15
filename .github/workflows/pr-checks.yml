@@ -61,6 +61,6 @@ jobs:
     - name: Run tests with coverage
       run: tox -e coverage
     - name: Coverage comment and badge
-      uses: py-cov-action/python-coverage-comment-action@v4
+      uses: py-cov-action/python-coverage-comment-action@v4.1
       with:
         GITHUB_TOKEN: ${{ github.token }}
