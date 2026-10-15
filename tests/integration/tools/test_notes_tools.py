@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 from src.chatbot.tools.create_note import CreateNote
+from src.chatbot.tools.current_time import CurrentTime
 from src.chatbot.tools.delete_note import DeleteNote
 from src.chatbot.tools.get_note import GetNote
 from src.chatbot.tools.list_notes import ListNotes
@@ -32,7 +33,7 @@ def test_list_notes_previews_each_note_with_its_id(api_adapter: APIAdapterFactor
     # Ids have to be visible, or the model cannot name a note to any other tool.
     notes = adapter.get_notes(FakeTokenService.create_fake_token(USER_ID))
     for note in notes:
-        assert f"(id: {note.id})" in rendered
+        assert f"(id: {note.id}," in rendered
 
 
 def test_list_notes_caps_its_output_and_says_it_did(api_adapter: APIAdapterFactory):
@@ -89,7 +90,11 @@ def test_get_note_returns_the_whole_note(api_adapter: APIAdapterFactory):
     rendered = tool(GetNote, adapter).run(note_id=str(groceries.id))
 
     # Previews truncate; this is the tool that does not.
-    assert rendered == f"# Groceries (id: {groceries.id})\n{groceries.content}"
+    updated = groceries.last_updated.date().isoformat()
+
+    assert rendered == (
+        f"# Groceries (id: {groceries.id}, updated: {updated})\n{groceries.content}"
+    )
 
 
 def test_get_note_handles_an_id_the_model_invented(api_adapter: APIAdapterFactory):
@@ -175,7 +180,9 @@ def test_the_registry_exposes_every_tool_with_a_usable_schema(
 ):
     registry = create_tool_registry(api_adapter("db_1", SECRET_KEY))
 
-    assert set(registry) == {tool_class.name for tool_class in NOTES_TOOLS}
+    assert set(registry) == {tool_class.name for tool_class in NOTES_TOOLS} | {
+        CurrentTime.name
+    }
 
     for name, registered in registry.items():
         assert registered.schema["name"] == name

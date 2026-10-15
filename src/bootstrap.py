@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Callable, TypeAlias
+from zoneinfo import ZoneInfo
 
 import requests
 from anthropic import Anthropic
@@ -10,7 +11,14 @@ from src.adapters.security.service_token_service import ServiceTokenService
 from src.chatbot.context.context_block import SystemPromptBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
-from src.env import ANTHROPIC_API_KEY, LOG_LEVEL, SERVICE_KEY, SIGNING_KEY, Env
+from src.env import (
+    ANTHROPIC_API_KEY,
+    LOG_LEVEL,
+    SERVICE_KEY,
+    SIGNING_KEY,
+    TIMEZONE,
+    Env,
+)
 from src.logs import configure as configure_logging
 
 ContextBuilderDependency: TypeAlias = Callable[[Request], ContextBuilder]
@@ -71,6 +79,7 @@ def setup_dependencies(app, env: Env) -> None:
     app.state.thread_store = create_thread_store()
     app.state.service_token_service = create_service_token_service(env)
     app.state.http_client = create_http_client()
+    app.state.timezone = ZoneInfo(env[TIMEZONE])
 
 
 def get_context_builder() -> ContextBuilderDependency:

@@ -61,6 +61,11 @@ class ToolResult:
     """What the tools produced, ready to be fed back to the model."""
 
     tool_result_message: MessageParam
+
+    #: Deliberately empty. get_next_step hands
+    #: tool_result_message to the following ModelStep, so it reaches the
+    #: conversation as that step's `sent`. Listing it here as well would put
+    #: every tool result into the history twice.
     messages: list[MessageParam] = field(default_factory=list)
 
 

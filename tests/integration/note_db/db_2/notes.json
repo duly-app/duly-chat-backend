@@ -4,6 +4,7 @@
     "title": "Groceries",
     "content": "Milk 2.50\nBread 3.20\nCoffee 7.80",
     "created_at": "2026-10-01T10:00:00Z",
+    "last_updated": "2026-10-06T18:30:00Z",
     "user_id": "550e8400-e29b-41d4-a716-446655440099",
     "owner": "550e8400-e29b-41d4-a716-446655440099"
   },
@@ -12,6 +13,7 @@
     "title": "Holiday packing",
     "content": "Passport, charger, swimming things.",
     "created_at": "2026-10-02T10:00:00Z",
+    "last_updated": "2026-10-02T10:00:00Z",
     "user_id": "550e8400-e29b-41d4-a716-446655440099",
     "owner": "550e8400-e29b-41d4-a716-446655440099"
   }

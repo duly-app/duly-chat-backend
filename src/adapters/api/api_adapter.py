@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Generic, TypeVar
 
 from src.adapters.security.token_service import AbstractTokenService
@@ -16,7 +17,21 @@ class APIAdapter(ABC, Generic[TokenServiceT]):
         self._token_service = token_service
 
     @abstractmethod
-    def get_notes(self, token: Token) -> list[Note]:
+    def get_notes(
+        self,
+        token: Token,
+        order_by: str | None = None,
+        descending: bool = True,
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
+    ) -> list[Note]:
+        """A user's notes, newest first unless told otherwise.
+
+        order_by is passed through as a string rather than mirroring the other
+        service's enum: the allowed values are declared in the tool's schema,
+        where they also constrain the model, and the API falls back on anything
+        it doesn't recognise.
+        """
         raise NotImplementedError
 
     @abstractmethod

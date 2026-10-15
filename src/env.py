@@ -1,17 +1,20 @@
 import os
 from abc import ABC, abstractmethod
 from typing import Final
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 ANTHROPIC_API_KEY: Final = "ANTHROPIC_API_KEY"
 SIGNING_KEY: Final = "SIGNING_KEY"
 SERVICE_KEY: Final = "SERVICE_KEY"
 DULY_SERVICE_URI: Final = "DULY_SERVICE_URI"
 LOG_LEVEL: Final = "LOG_LEVEL"
+TIMEZONE: Final = "TIMEZONE"
 
 REQUIRED: Final = (ANTHROPIC_API_KEY, SIGNING_KEY, SERVICE_KEY)
 DEFAULTS: Final = {
     DULY_SERVICE_URI: "http://localhost:8001",
     LOG_LEVEL: "INFO",
+    TIMEZONE: "UTC",
 }
 KNOWN: Final = (*REQUIRED, *DEFAULTS)
 
@@ -38,6 +41,14 @@ class Env(ABC):
 
         if missing:
             raise EnvError(f"Not set: {', '.join(missing)}")
+
+        try:
+            ZoneInfo(self[TIMEZONE])
+        except (ZoneInfoNotFoundError, ValueError) as error:
+            raise EnvError(
+                f"TIMEZONE is not a zone this system knows: {self[TIMEZONE]}. "
+                "A named zone needs the tzdata database present in the image."
+            ) from error
 
         if self[SERVICE_KEY] == self[SIGNING_KEY]:
             raise EnvError(

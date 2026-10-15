@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 import pytest
@@ -17,7 +18,47 @@ def test_api_adapter_returns_notes_for_token_user(api_adapter: APIAdapterFactory
     notes = adapter.get_notes(token)
 
     assert len(notes) == 5
+    # Listings are ordered, most recently updated first.
     assert notes[0].title == "Project ideas"
+    assert [note.last_updated for note in notes] == sorted(
+        (note.last_updated for note in notes), reverse=True
+    )
+
+
+def test_api_adapter_orders_notes_by_the_requested_column(
+    api_adapter: APIAdapterFactory,
+):
+    """The fixtures are written so the two columns disagree.
+
+    Project ideas is the oldest note but the most recently edited one, so a
+    listing that ignored order_by would pass the default case by accident.
+    """
+    adapter = api_adapter("db_1", SECRET_KEY)
+    token = FakeTokenService.create_fake_token(USER_ID)
+
+    by_update = adapter.get_notes(token)
+    by_creation = adapter.get_notes(token, order_by="created_at")
+
+    assert by_update[0].title == "Project ideas"
+    assert by_creation[0].title == "Testing strategy"
+    assert by_creation[-1].title == "Project ideas"
+
+
+def test_api_adapter_filters_notes_by_an_updated_window(
+    api_adapter: APIAdapterFactory,
+):
+    adapter = api_adapter("db_1", SECRET_KEY)
+    token = FakeTokenService.create_fake_token(USER_ID)
+
+    notes = adapter.get_notes(
+        token, updated_after=datetime(2026, 9, 14, tzinfo=timezone.utc)
+    )
+
+    assert [note.title for note in notes] == [
+        "Project ideas",
+        "FastAPI patterns",
+        "TODO: implement ActionStep",
+    ]
 
 
 def test_api_adapter_returns_empty_for_nonexistent_user(api_adapter: APIAdapterFactory):

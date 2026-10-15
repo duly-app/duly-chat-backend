@@ -135,6 +135,7 @@ def test_the_tool_schemas_come_from_the_registry(
         "create_note",
         "update_note",
         "delete_note",
+        "current_time",
         "sum",
     ]
 

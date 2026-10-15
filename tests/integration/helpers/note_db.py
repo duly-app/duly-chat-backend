@@ -19,6 +19,7 @@ class FullNote:
     title: str
     content: str
     created_at: datetime.datetime
+    last_updated: datetime.datetime
     user_id: UserID
     owner: UserID
     deleted: bool = False
@@ -26,9 +27,11 @@ class FullNote:
 
     @classmethod
     def from_dict(cls, data: dict) -> "FullNote":
-        data["created_at"] = datetime.datetime.fromisoformat(
-            data["created_at"].replace("Z", "+00:00")
-        )
+        for field in ("created_at", "last_updated"):
+            data[field] = datetime.datetime.fromisoformat(
+                data[field].replace("Z", "+00:00")
+            )
+
         data["user_id"] = UUID(data["user_id"])
         data["owner"] = UUID(data["owner"])
         data["id"] = UUID(data["id"])
@@ -41,6 +44,7 @@ class FullNote:
             title=self.title,
             content=self.content,
             created_at=self.created_at,
+            last_updated=self.last_updated,
         )
 
 
@@ -56,8 +60,27 @@ class NoteDB:
             for note_dict in notes_data:
                 yield FullNote.from_dict(note_dict)
 
-    def get_notes_by_user(self, user_id: UserID) -> list[Note]:
-        return [fn.to_note() for fn in self._live_notes(user_id)]
+    def get_notes_by_user(
+        self,
+        user_id: UserID,
+        order_by: str = "last_updated",
+        descending: bool = True,
+        updated_after: datetime.datetime | None = None,
+        updated_before: datetime.datetime | None = None,
+    ) -> list[Note]:
+        def in_window(note: Note) -> bool:
+            if updated_after is not None and note.last_updated < updated_after:
+                return False
+
+            return updated_before is None or note.last_updated < updated_before
+
+        notes = [fn.to_note() for fn in self._live_notes(user_id)]
+
+        return sorted(
+            (note for note in notes if in_window(note)),
+            key=lambda note: (getattr(note, order_by), str(note.id)),
+            reverse=descending,
+        )
 
     def search(self, user_id: UserID, keyword: str) -> list[Note]:
         """Case-insensitive substring match.
@@ -77,11 +100,13 @@ class NoteDB:
         return self._owned_note(user_id, note_id).to_note()
 
     def add(self, user_id: UserID, title: str, content: str) -> Note:
+        now = datetime.datetime.now(datetime.timezone.utc)
         note = FullNote(
             id=uuid4(),
             title=title,
             content=content,
-            created_at=datetime.datetime.now(datetime.timezone.utc),
+            created_at=now,
+            last_updated=now,
             user_id=user_id,
             owner=user_id,
         )
@@ -104,6 +129,7 @@ class NoteDB:
         if content is not None:
             note.content = content
 
+        note.last_updated = datetime.datetime.now(datetime.timezone.utc)
         note.version += 1
 
         return note.to_note()
