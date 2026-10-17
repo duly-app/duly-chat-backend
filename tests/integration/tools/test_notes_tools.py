@@ -8,8 +8,8 @@ from src.chatbot.tools.list_notes import ListNotes
 from src.chatbot.tools.registry import NOTES_TOOLS, create_tool_registry
 from src.chatbot.tools.search_notes import SearchNotes
 from src.chatbot.tools.update_note import UpdateNote
-from tests.integration.conftest import APIAdapterFactory
-from tests.integration.helpers.tokens import access_token
+from tests.conftest import APIAdapterFactory
+from tests.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 UNKNOWN_USER_ID = UUID("00000000-0000-0000-0000-000000000000")

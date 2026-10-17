@@ -9,8 +9,8 @@ from src.chatbot.loop_result import StepResult, ToolResult
 from src.chatbot.loop_step import ActionStep, LoopContext
 from src.chatbot.tools.notes_tool import NotesTool
 from src.chatbot.tools.registry import RegisteredTool, create_tool_registry
-from tests.integration.conftest import APIAdapterFactory
-from tests.integration.helpers.tokens import access_token
+from tests.conftest import APIAdapterFactory
+from tests.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")

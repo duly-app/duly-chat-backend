@@ -15,9 +15,10 @@ from src.chatbot.loop_result import (
     conversation_history,
 )
 from src.chatbot.tools.registry import create_tool_registry
-from tests.integration.conftest import AnthropicClientFactory, APIAdapterFactory
+from tests.conftest import APIAdapterFactory
+from tests.helpers.tokens import access_token
+from tests.integration.conftest import AnthropicClientFactory
 from tests.integration.fakes.fake_tools import with_testing_tools
-from tests.integration.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
