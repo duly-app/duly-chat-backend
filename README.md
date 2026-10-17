@@ -7,13 +7,13 @@
 | src/\_\_init\_\_.py                              |        0 |        0 |    100% |           |
 | src/adapters/\_\_init\_\_.py                     |        0 |        0 |    100% |           |
 | src/adapters/api/\_\_init\_\_.py                 |        0 |        0 |    100% |           |
-| src/adapters/api/api\_adapter.py                 |       31 |        6 |     81% |35, 39, 43, 47, 58, 62 |
-| src/adapters/api/duly\_api.py                    |       56 |        6 |     89% |62, 65, 68, 90-95 |
+| src/adapters/api/api\_adapter.py                 |       24 |        6 |     75% |26, 30, 34, 38, 49, 53 |
+| src/adapters/api/duly\_api.py                    |       54 |        6 |     89% |58, 61, 64, 86-91 |
 | src/adapters/security/\_\_init\_\_.py            |        3 |        0 |    100% |           |
-| src/adapters/security/jwt\_token\_service.py     |        9 |        1 |     89% |        10 |
+| src/adapters/security/jwt\_codec.py              |       16 |        0 |    100% |           |
 | src/adapters/security/service\_token\_service.py |       13 |        0 |    100% |           |
-| src/adapters/security/token\_service.py          |       27 |        8 |     70% |23, 27-33, 37, 42 |
-| src/app.py                                       |       60 |       13 |     78% |72-114, 123 |
+| src/adapters/security/token\_service.py          |       29 |        7 |     76% |34-40, 44, 50 |
+| src/app.py                                       |       60 |       13 |     78% |68-110, 119 |
 | src/bootstrap.py                                 |       38 |        0 |    100% |           |
 | src/chatbot/\_\_init\_\_.py                      |        0 |        0 |    100% |           |
 | src/chatbot/context/\_\_init\_\_.py              |        0 |        0 |    100% |           |
@@ -45,7 +45,7 @@
 | src/env.py                                       |       36 |        4 |     89% |29, 47-48, 63 |
 | src/logs.py                                      |       26 |        1 |     96% |        51 |
 | src/main.py                                      |        4 |        4 |      0% |       1-6 |
-| **TOTAL**                                        |  **792** |   **72** | **91%** |           |
+| **TOTAL**                                        |  **792** |   **70** | **91%** |           |
 
 
 ## Setup coverage badge

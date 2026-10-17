@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_67cf323a099cee3e_block_type_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-15 20:46 +0000
+            created at 2026-10-17 15:35 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -86,8 +86,8 @@
     <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">import</span> <span class="nam">requests</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">anthropic</span> <span class="key">import</span> <span class="nam">Anthropic</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">adapters</span><span class="op">.</span><span class="nam">security</span><span class="op">.</span><span class="nam">jwt_token_service</span> <span class="key">import</span> <span class="nam">JWTTokenService</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">adapters</span><span class="op">.</span><span class="nam">security</span><span class="op">.</span><span class="nam">service_token_service</span> <span class="key">import</span> <span class="nam">ServiceTokenService</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">adapters</span><span class="op">.</span><span class="nam">security</span><span class="op">.</span><span class="nam">service_token_service</span> <span class="key">import</span> <span class="nam">ServiceTokenService</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">adapters</span><span class="op">.</span><span class="nam">security</span><span class="op">.</span><span class="nam">token_service</span> <span class="key">import</span> <span class="nam">TokenService</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">chatbot</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">context_block</span> <span class="key">import</span> <span class="nam">SystemPromptBlock</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">chatbot</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">context_builder</span> <span class="key">import</span> <span class="nam">ContextBuilder</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">chatbot</span><span class="op">.</span><span class="nam">threads</span><span class="op">.</span><span class="nam">thread_store</span> <span class="key">import</span> <span class="nam">ThreadStore</span>&nbsp;</span><span class="r"></span></p>
@@ -118,8 +118,8 @@
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="key">return</span> <span class="nam">Anthropic</span><span class="op">(</span><span class="nam">api_key</span><span class="op">=</span><span class="nam">env</span><span class="op">[</span><span class="nam">ANTHROPIC_API_KEY</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">def</span> <span class="nam">create_token_service</span><span class="op">(</span><span class="nam">env</span><span class="op">:</span> <span class="nam">Env</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">JWTTokenService</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="key">return</span> <span class="nam">JWTTokenService</span><span class="op">(</span><span class="nam">env</span><span class="op">[</span><span class="nam">SIGNING_KEY</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">def</span> <span class="nam">create_token_service</span><span class="op">(</span><span class="nam">env</span><span class="op">:</span> <span class="nam">Env</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">TokenService</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="key">return</span> <span class="nam">TokenService</span><span class="op">(</span><span class="nam">env</span><span class="op">[</span><span class="nam">SIGNING_KEY</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="key">def</span> <span class="nam">create_http_client</span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">Session</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -161,7 +161,7 @@
             <a class="nav" href="z_67cf323a099cee3e_block_type_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-15 20:46 +0000
+            created at 2026-10-17 15:35 +0000
         </p>
     </div>
 </footer>
