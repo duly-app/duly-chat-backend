@@ -9,7 +9,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 from src.adapters.api.duly_api import DulyAPI
-from src.adapters.security.jwt_token_service import JWTTokenService
+from src.adapters.security.token_service import TokenService
 from src.bootstrap import setup_dependencies
 from src.chatbot.loop import chat_loop
 from src.chatbot.loop_result import conversation_history
@@ -34,19 +34,15 @@ class ChatResponse(BaseModel):
 security = HTTPBearer()
 
 
-def get_token_service(request: Request) -> JWTTokenService:
+def get_token_service(request: Request) -> TokenService:
     return request.app.state.token_service
 
 
-def get_api_adapter(
-    request: Request,
-    token_service: JWTTokenService = Depends(get_token_service),
-) -> DulyAPI:
+def get_api_adapter(request: Request) -> DulyAPI:
     service_uri = request.app.state.env[DULY_SERVICE_URI]
 
     return DulyAPI(
         service_uri,
-        token_service,
         request.app.state.service_token_service,
         request.app.state.http_client,
     )
@@ -58,7 +54,7 @@ async def chat(
     body: ChatRequest,
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    token_service: JWTTokenService = Depends(get_token_service),
+    token_service: TokenService = Depends(get_token_service),
     api_adapter: DulyAPI = Depends(get_api_adapter),
 ):
     payload = token_service.decode_token(credentials.credentials)

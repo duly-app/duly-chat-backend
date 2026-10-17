@@ -5,16 +5,14 @@ import jwt
 import pytest
 
 from src.adapters.api.duly_api import DulyAPI
-from src.adapters.security.jwt_token_service import JWTTokenService
 from src.adapters.security.service_token_service import (
     SERVICE_SUBJECT,
     SERVICE_TOKEN_HEADER,
-    SERVICE_TOKEN_TYPE,
     ServiceTokenService,
+    ServiceTokenType,
 )
 from tests.integration.fakes.fake_http_client import FakeHTTPClient
 
-# Long enough to keep pyjwt from warning about weak HMAC keys.
 SERVICE_KEY = "service-key-that-is-at-least-32-bytes-long"
 SIGNING_KEY = "signing-key-that-is-at-least-32-bytes-long"
 USER_JWT = "user-jwt"
@@ -42,7 +40,6 @@ def http() -> FakeHTTPClient:
 def api(http: FakeHTTPClient) -> DulyAPI:
     return DulyAPI(
         "http://notes",
-        JWTTokenService(SIGNING_KEY),
         ServiceTokenService(SERVICE_KEY),
         http_client=http,
     )
@@ -62,7 +59,7 @@ def test_writes_carry_both_credentials(api: DulyAPI, http: FakeHTTPClient):
 
     claims = service_claims(http.last_call)
     assert claims["sub"] == SERVICE_SUBJECT
-    assert claims["type"] == SERVICE_TOKEN_TYPE
+    assert claims["type"] == ServiceTokenType.SERVICE
 
     # Short-lived, because it travels over plain HTTP internally: sniffing a
     # request buys a minute of replay, not permanent impersonation.

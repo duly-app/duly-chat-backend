@@ -16,8 +16,8 @@ from src.chatbot.loop_result import (
 )
 from src.chatbot.tools.registry import create_tool_registry
 from tests.integration.conftest import AnthropicClientFactory, APIAdapterFactory
-from tests.integration.fakes.fake_token_service import FakeTokenService
 from tests.integration.fakes.fake_tools import with_testing_tools
+from tests.integration.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
@@ -28,9 +28,9 @@ def test_chat_loop_returns_assistant_answer_on_end_turn(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_1")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     outcome = chat_loop(
         user_id=USER_ID,
@@ -66,9 +66,9 @@ def test_chat_loop_runs_a_tool_and_answers_from_its_output(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_2")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     outcome = chat_loop(
         user_id=USER_ID,
@@ -111,9 +111,9 @@ def test_the_tool_schemas_come_from_the_registry(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_1")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     chat_loop(
         user_id=USER_ID,
@@ -145,9 +145,9 @@ def test_chat_loop_chains_two_tool_calls(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_2", "test-secret")
+    api = api_adapter("db_2")
     client = anthropic_client("responses_3")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     outcome = chat_loop(
         user_id=USER_ID,
@@ -192,9 +192,9 @@ def test_the_trajectory_records_every_step_and_derives_the_history(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_2", "test-secret")
+    api = api_adapter("db_2")
     client = anthropic_client("responses_3")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     outcome = chat_loop(
         user_id=USER_ID,
@@ -249,9 +249,9 @@ def test_chat_loop_sends_prior_history_before_the_new_message(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_1")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     earlier: list[MessageParam] = [
         {"role": "user", "content": "Hello"},
@@ -289,9 +289,9 @@ def test_chat_loop_rejects_a_truncated_response(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_4")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     with pytest.raises(ResponseTruncated):
         chat_loop(
@@ -314,9 +314,9 @@ def test_chat_loop_gives_up_after_max_iterations(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_2")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     # responses_2 needs three steps to finish: model, tool, model. Two is one short.
     with pytest.raises(MaxIterationsExceeded):
@@ -341,9 +341,9 @@ def test_the_outcomes_answer_is_the_models_prose_without_tool_blocks(
     anthropic_client: AnthropicClientFactory,
     context_builder: ContextBuilder,
 ):
-    api = api_adapter("db_1", "test-secret")
+    api = api_adapter("db_1")
     client = anthropic_client("responses_2")
-    token = FakeTokenService.create_fake_token(USER_ID)
+    token = access_token(USER_ID)
 
     outcome = chat_loop(
         user_id=USER_ID,

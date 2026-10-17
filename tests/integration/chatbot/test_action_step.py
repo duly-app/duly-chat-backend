@@ -10,7 +10,7 @@ from src.chatbot.loop_step import ActionStep, LoopContext
 from src.chatbot.tools.notes_tool import NotesTool
 from src.chatbot.tools.registry import RegisteredTool, create_tool_registry
 from tests.integration.conftest import APIAdapterFactory
-from tests.integration.fakes.fake_token_service import FakeTokenService
+from tests.integration.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
 THREAD_ID = UUID("550e8400-e29b-41d4-a716-4466554400aa")
@@ -38,7 +38,7 @@ class Silent(NotesTool):
 
 
 def context(api_adapter: APIAdapterFactory) -> LoopContext:
-    adapter = api_adapter("db_1", "test-secret")
+    adapter = api_adapter("db_1")
     registry = create_tool_registry(adapter)
 
     for tool_class in (Exploding, Silent):
@@ -50,7 +50,7 @@ def context(api_adapter: APIAdapterFactory) -> LoopContext:
         user_id=USER_ID,
         thread_id=THREAD_ID,
         turn_id=TURN_ID,
-        jwt=FakeTokenService.create_fake_token(USER_ID),
+        jwt=access_token(USER_ID),
         history=[],
         trajectory=[],
         api_adapter=adapter,

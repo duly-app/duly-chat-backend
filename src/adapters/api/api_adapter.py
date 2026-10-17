@@ -1,21 +1,12 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Generic, TypeVar
 
-from src.adapters.security.token_service import AbstractTokenService
-from src.domain import Note, UserID
+from src.domain import Note
 from src.domain.notes import NoteID
 from src.domain.user import Token
 
-TokenServiceT = TypeVar("TokenServiceT", bound=AbstractTokenService)
 
-
-class APIAdapter(ABC, Generic[TokenServiceT]):
-    _token_service: TokenServiceT
-
-    def __init__(self, token_service: TokenServiceT):
-        self._token_service = token_service
-
+class APIAdapter(ABC):
     @abstractmethod
     def get_notes(
         self,
@@ -60,7 +51,3 @@ class APIAdapter(ABC, Generic[TokenServiceT]):
     @abstractmethod
     def delete_note(self, token: Token, note_id: NoteID) -> None:
         raise NotImplementedError
-
-    def get_user_id(self, token: Token) -> UserID:
-        """Who the token belongs to, for adapters that must resolve it themselves."""
-        return self._token_service.get_user_id_from_token(token)

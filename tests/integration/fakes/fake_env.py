@@ -1,7 +1,5 @@
 from src.env import ANTHROPIC_API_KEY, KNOWN, SERVICE_KEY, SIGNING_KEY, Env
 
-# Long enough that pyjwt doesn't warn about weak HMAC keys, and distinct from
-# each other so validate() is satisfied.
 VALID_VALUES = {
     ANTHROPIC_API_KEY: "anthropic-key-not-used-by-any-test",
     SIGNING_KEY: "signing-key-that-is-at-least-32-bytes",

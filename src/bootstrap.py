@@ -4,8 +4,8 @@ from zoneinfo import ZoneInfo
 import requests
 from anthropic import Anthropic
 
-from src.adapters.security.jwt_token_service import JWTTokenService
 from src.adapters.security.service_token_service import ServiceTokenService
+from src.adapters.security.token_service import TokenService
 from src.chatbot.context.context_block import SystemPromptBlock
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.threads.thread_store import ThreadStore
@@ -36,8 +36,8 @@ def create_anthropic_client(env: Env) -> Anthropic:
     return Anthropic(api_key=env[ANTHROPIC_API_KEY])
 
 
-def create_token_service(env: Env) -> JWTTokenService:
-    return JWTTokenService(env[SIGNING_KEY])
+def create_token_service(env: Env) -> TokenService:
+    return TokenService(env[SIGNING_KEY])
 
 
 def create_http_client() -> requests.Session:

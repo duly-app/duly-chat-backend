@@ -1,4 +1,9 @@
-from .jwt_token_service import JWTTokenService
-from .token_service import AbstractTokenService, TokenPayload
+from .service_token_service import ServiceTokenService
+from .token_service import TokenService, TokenType, UserTokenPayload
 
-__all__ = ["AbstractTokenService", "TokenPayload", "JWTTokenService"]
+__all__ = [
+    "ServiceTokenService",
+    "TokenService",
+    "TokenType",
+    "UserTokenPayload",
+]

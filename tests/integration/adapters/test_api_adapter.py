@@ -5,15 +5,14 @@ import pytest
 import requests
 
 from tests.integration.conftest import APIAdapterFactory
-from tests.integration.fakes.fake_token_service import FakeTokenService
+from tests.integration.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
-SECRET_KEY = "test-secret"
 
 
 def test_api_adapter_returns_notes_for_token_user(api_adapter: APIAdapterFactory):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     notes = adapter.get_notes(token)
 
@@ -33,8 +32,8 @@ def test_api_adapter_orders_notes_by_the_requested_column(
     Project ideas is the oldest note but the most recently edited one, so a
     listing that ignored order_by would pass the default case by accident.
     """
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     by_update = adapter.get_notes(token)
     by_creation = adapter.get_notes(token, order_by="created_at")
@@ -47,8 +46,8 @@ def test_api_adapter_orders_notes_by_the_requested_column(
 def test_api_adapter_filters_notes_by_an_updated_window(
     api_adapter: APIAdapterFactory,
 ):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     notes = adapter.get_notes(
         token, updated_after=datetime(2026, 9, 14, tzinfo=timezone.utc)
@@ -64,8 +63,8 @@ def test_api_adapter_filters_notes_by_an_updated_window(
 def test_api_adapter_returns_empty_for_nonexistent_user(api_adapter: APIAdapterFactory):
     nonexistent_user = UUID("00000000-0000-0000-0000-000000000000")
 
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(nonexistent_user)
+    adapter = api_adapter("db_1")
+    token = access_token(nonexistent_user)
 
     notes = adapter.get_notes(token)
 
@@ -75,8 +74,8 @@ def test_api_adapter_returns_empty_for_nonexistent_user(api_adapter: APIAdapterF
 def test_api_adapter_creates_a_note_the_user_can_then_read(
     api_adapter: APIAdapterFactory,
 ):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     created = adapter.create_note(token, title="Shopping", content="Olives")
 
@@ -92,8 +91,8 @@ def test_api_adapter_creates_a_note_the_user_can_then_read(
 def test_api_adapter_updates_only_the_field_it_is_given(
     api_adapter: APIAdapterFactory,
 ):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     created = adapter.create_note(token, title="Shopping", content="Olives")
     adapter.update_note(token, created.id, content="Olives, bread")
@@ -107,8 +106,8 @@ def test_api_adapter_updates_only_the_field_it_is_given(
 
 
 def test_api_adapter_hides_a_deleted_note(api_adapter: APIAdapterFactory):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     created = adapter.create_note(token, title="Shopping", content="Olives")
     adapter.delete_note(token, created.id)
@@ -121,8 +120,8 @@ def test_api_adapter_hides_a_deleted_note(api_adapter: APIAdapterFactory):
 
 
 def test_api_adapter_searches_titles_and_content(api_adapter: APIAdapterFactory):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    token = FakeTokenService.create_fake_token(USER_ID)
+    adapter = api_adapter("db_1")
+    token = access_token(USER_ID)
 
     by_title = adapter.get_notes_by_keyword(token, "strategy")
     assert [note.title for note in by_title] == ["Testing strategy"]
@@ -142,9 +141,9 @@ def test_api_adapter_searches_titles_and_content(api_adapter: APIAdapterFactory)
 
 
 def test_api_adapter_will_not_touch_another_users_note(api_adapter: APIAdapterFactory):
-    adapter = api_adapter("db_1", SECRET_KEY)
-    owner_token = FakeTokenService.create_fake_token(USER_ID)
-    stranger_token = FakeTokenService.create_fake_token(uuid4())
+    adapter = api_adapter("db_1")
+    owner_token = access_token(USER_ID)
+    stranger_token = access_token(uuid4())
 
     created = adapter.create_note(owner_token, title="Private", content="Secret")
 

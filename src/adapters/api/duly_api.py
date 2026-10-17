@@ -3,7 +3,6 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from src.adapters.api.api_adapter import APIAdapter
-from src.adapters.security.jwt_token_service import JWTTokenService
 from src.adapters.security.service_token_service import (
     SERVICE_TOKEN_HEADER,
     ServiceTokenService,
@@ -30,7 +29,7 @@ class HTTPClient(Protocol):
     def delete(self, url: str, **kwargs: Any) -> HTTPResponse: ...
 
 
-class DulyAPI(APIAdapter[JWTTokenService]):
+class DulyAPI(APIAdapter):
     _service_uri: str
     _service_token_service: ServiceTokenService
     _http: HTTPClient
@@ -38,15 +37,12 @@ class DulyAPI(APIAdapter[JWTTokenService]):
     def __init__(
         self,
         service_uri: str,
-        token_service: JWTTokenService,
         service_token_service: ServiceTokenService,
         http_client: HTTPClient,
     ):
         self._service_uri = service_uri
         self._service_token_service = service_token_service
         self._http = http_client
-
-        super().__init__(token_service)
 
     def get_notes(
         self,
