@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from tests.integration.conftest import NoteDBFactory
+from tests.conftest import NoteDBFactory
 
 
 def test_note_db_loads_notes(note_db: NoteDBFactory):

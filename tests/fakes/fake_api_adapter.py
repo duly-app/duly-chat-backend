@@ -4,8 +4,8 @@ from src.adapters.api.api_adapter import APIAdapter
 from src.adapters.security.token_service import TokenService
 from src.domain.notes import Note, NoteID
 from src.domain.user import Token, UserID
-from tests.integration.helpers.note_db import NoteDB
-from tests.integration.helpers.tokens import TEST_SIGNING_KEY
+from tests.helpers.note_db import NoteDB
+from tests.helpers.tokens import TEST_SIGNING_KEY
 
 
 class FakeAPIAdapter(APIAdapter):
