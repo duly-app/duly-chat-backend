@@ -21,7 +21,7 @@ from src.chatbot.threads.thread_store import ThreadID, TurnID
 from src.chatbot.tools.registry import ToolRegistry
 from src.domain.user import Token, UserID
 
-MODEL = "claude-opus-5"
+MODEL = "claude-sonnet-5-5"
 MAX_TOKENS = 4096
 
 
