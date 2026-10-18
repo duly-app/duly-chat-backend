@@ -48,6 +48,17 @@ class FullNote:
         )
 
 
+def _utc(value: datetime.datetime | None) -> datetime.datetime | None:
+    """Read a naive bound as UTC, as a timestamptz column would.
+
+    The notes carry offsets, so comparing them against a naive bound raises.
+    """
+    if value is None or value.tzinfo is not None:
+        return value
+
+    return value.replace(tzinfo=datetime.timezone.utc)
+
+
 class NoteDB:
     notes: list[FullNote]
 
@@ -68,11 +79,14 @@ class NoteDB:
         updated_after: datetime.datetime | None = None,
         updated_before: datetime.datetime | None = None,
     ) -> list[Note]:
+        after = _utc(updated_after)
+        before = _utc(updated_before)
+
         def in_window(note: Note) -> bool:
-            if updated_after is not None and note.last_updated < updated_after:
+            if after is not None and note.last_updated < after:
                 return False
 
-            return updated_before is None or note.last_updated < updated_before
+            return before is None or note.last_updated < before
 
         notes = [fn.to_note() for fn in self._live_notes(user_id)]
 
