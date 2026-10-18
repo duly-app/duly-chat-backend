@@ -1,0 +1,110 @@
+[
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1001",
+    "title": "Sourdough starter",
+    "content": "Fed the starter at 09:00. Doubles in about five hours at room temperature. Next bake uses 20% whole rye.",
+    "created_at": "2026-09-02T07:15:00Z",
+    "last_updated": "2026-09-15T07:15:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1002",
+    "title": "Guitar practice log",
+    "content": "Working in DADGAD tuning. Twenty minutes of scales daily, then the Bert Jansch arrangement.",
+    "created_at": "2026-08-20T19:00:00Z",
+    "last_updated": "2026-10-16T19:30:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1003",
+    "title": "Flat viewing notes",
+    "content": "Oosterpark, third floor, no lift. South facing living room, bright in the afternoon. Asking 475k, service charge 180 a month. The kitchen was redone in 2024 and the boiler is new. Bike storage in the basement is shared with twelve flats, and the neighbour mentioned the stairwell gets repainted every spring. Bos en Lommer, ground floor, cheaper at 390k, but there was visible damp along the back wall of the rear bedroom and the smell did not clear when the window was open.",
+    "created_at": "2026-10-05T12:00:00Z",
+    "last_updated": "2026-10-10T16:45:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1004",
+    "title": "Reading list",
+    "content": "Finished Piranesi. Next: The Glass Bead Game, then something short.",
+    "created_at": "2026-07-11T21:00:00Z",
+    "last_updated": "2026-08-01T21:00:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1005",
+    "title": "Tax return 2026",
+    "content": "Mortgage interest statement still missing. Deadline is the first of May.",
+    "created_at": "2026-10-01T09:00:00Z",
+    "last_updated": "2026-10-02T09:30:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1006",
+    "title": "Bike lock combination",
+    "content": "Front wheel lock is 4182. The chain lock key lives on the hook by the door.",
+    "created_at": "2026-10-04T08:00:00Z",
+    "last_updated": "2026-10-05T08:20:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1007",
+    "title": "Pasta dough ratios",
+    "content": "100g flour to one egg for tagliatelle. Semola for orecchiette, no egg, warm water.",
+    "created_at": "2026-08-14T18:30:00Z",
+    "last_updated": "2026-08-22T18:30:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1008",
+    "title": "Standing desk research",
+    "content": "Shortlist is two frames. The cheaper one wobbles above 110cm according to every review.",
+    "created_at": "2026-10-07T11:00:00Z",
+    "last_updated": "2026-10-08T11:15:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1009",
+    "title": "Dentist",
+    "content": "Six month check-up booked. They want to look at the filling on the lower left again.",
+    "created_at": "2026-09-28T13:00:00Z",
+    "last_updated": "2026-10-01T13:05:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1010",
+    "title": "Dutch vocabulary",
+    "content": "gezellig, afspraak, meevallen, tegenvallen, uitwaaien. Keep confusing leren and leven.",
+    "created_at": "2026-08-03T20:00:00Z",
+    "last_updated": "2026-08-30T20:10:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1011",
+    "title": "Server costs",
+    "content": "Current VPS is 14 euro a month. Managed Postgres would add 22, which is not worth it yet.",
+    "created_at": "2026-10-09T15:00:00Z",
+    "last_updated": "2026-10-11T15:30:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  },
+  {
+    "id": "9f1c7a52-3b6e-4f80-9d21-7a4e5c8b1012",
+    "title": "Houseplant watering",
+    "content": "Monstera every ten days, ferns twice a week, the cactus basically never.",
+    "created_at": "2026-07-18T09:00:00Z",
+    "last_updated": "2026-07-20T09:00:00Z",
+    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "owner": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+  }
+]

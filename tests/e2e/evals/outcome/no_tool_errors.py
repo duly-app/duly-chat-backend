@@ -4,11 +4,7 @@ from tests.e2e.evals.tool_results import tool_result_blocks
 
 
 class NoToolErrors(Outcome[Trajectory]):
-    """No tool reported a failure.
-
-    A failing tool is reported to the model rather than raised, so a turn can
-    answer plausibly on top of a broken one.
-    """
+    """No tool reported a failure."""
 
     def evaluate(self, answer: Trajectory) -> bool:
         return not any(block.get("is_error") for block in tool_result_blocks(answer))
