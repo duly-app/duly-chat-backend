@@ -45,6 +45,9 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+markers = [
+    "evals: puts questions to the real model. Slow, costs money, not deterministic.",
+]
 
 [dependency-groups]
 dev = [

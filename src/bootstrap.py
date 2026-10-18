@@ -19,15 +19,18 @@ from src.env import (
 )
 from src.logs import configure as configure_logging
 
+CONTEXT_DIR = Path(__file__).parent / "chatbot" / "context"
+SYSTEM_TEMPLATE = CONTEXT_DIR / "system_template.txt"
 
-def create_context_builder() -> ContextBuilder:
+
+def create_context_builder(system_template: Path | None = None) -> ContextBuilder:
     """Create and initialize the context builder with blocks."""
-    context_dir = Path(__file__).parent / "chatbot" / "context"
+    template = system_template or SYSTEM_TEMPLATE
 
-    assert context_dir.exists(), f"Context directory {context_dir} does not exist"
+    assert template.exists(), f"System template {template} does not exist"
 
     system_block = SystemPromptBlock()
-    system_block.load_content(str(context_dir / "system_template.txt"))
+    system_block.load_content(str(template))
 
     return ContextBuilder([system_block])
 
