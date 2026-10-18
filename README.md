@@ -14,7 +14,7 @@
 | src/adapters/security/service\_token\_service.py |       13 |        0 |    100% |           |
 | src/adapters/security/token\_service.py          |       29 |        7 |     76% |34-40, 44, 50 |
 | src/app.py                                       |       60 |       13 |     78% |68-110, 119 |
-| src/bootstrap.py                                 |       38 |        0 |    100% |           |
+| src/bootstrap.py                                 |       40 |        0 |    100% |           |
 | src/chatbot/\_\_init\_\_.py                      |        0 |        0 |    100% |           |
 | src/chatbot/context/\_\_init\_\_.py              |        0 |        0 |    100% |           |
 | src/chatbot/context/block\_type.py               |        5 |        0 |    100% |           |
@@ -45,7 +45,7 @@
 | src/env.py                                       |       36 |        4 |     89% |29, 47-48, 63 |
 | src/logs.py                                      |       26 |        1 |     96% |        51 |
 | src/main.py                                      |        4 |        4 |      0% |       1-6 |
-| **TOTAL**                                        |  **792** |   **70** | **91%** |           |
+| **TOTAL**                                        |  **794** |   **70** | **91%** |           |
 
 
 ## Setup coverage badge
