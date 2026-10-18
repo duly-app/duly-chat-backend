@@ -12,7 +12,7 @@ class EvalCase:
 
     name: str
     question: str
-    db: str = "evals"
+    db: str
     trajectory_outcomes: list[Outcome[Trajectory]] = field(default_factory=list)
     answer_outcomes: list[Outcome[str]] = field(default_factory=list)
     available_tools: list[type[Tool]] | None = None
