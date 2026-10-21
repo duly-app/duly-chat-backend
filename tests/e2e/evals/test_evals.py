@@ -154,10 +154,7 @@ def test_updates_the_note_it_found(live_anthropic_client: Anthropic):
         EvalCase(
             name="updates_the_note_it_found",
             db=NOTES_DB,
-            question=(
-                "Add Dune to my reading list. "
-                "Go ahead and do it, no need to check with me."
-            ),
+            question="Add Dune to my reading list.",
             trajectory_outcomes=[
                 ToolCallMatch(UpdateNote, {"note_id": READING_LIST}),
                 NoToolErrors(),
@@ -169,15 +166,13 @@ def test_updates_the_note_it_found(live_anthropic_client: Anthropic):
 
 @pytest.mark.evals
 def test_creates_a_note_it_is_asked_for(live_anthropic_client: Anthropic):
-    # Explicit, because the system prompt tells it to show a draft and confirm
-    # first. Testing the confirming behaviour itself needs several turns.
     assert_case(
         EvalCase(
             name="creates_a_note_it_is_asked_for",
             db=NOTES_DB,
             question=(
-                "Make a note called 'Bike maintenance' that says the brake pads "
-                "need replacing. Create it now, do not check with me first."
+                "Make a note called 'Bike maintenance' that says the brake "
+                "pads need replacing."
             ),
             trajectory_outcomes=[
                 ToolCallMatch(CreateNote, {"title": "Bike maintenance"}),
