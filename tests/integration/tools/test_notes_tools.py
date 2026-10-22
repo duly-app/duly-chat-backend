@@ -3,12 +3,14 @@ from uuid import UUID, uuid4
 from src.chatbot.tools.create_note import CreateNote
 from src.chatbot.tools.current_time import CurrentTime
 from src.chatbot.tools.delete_note import DeleteNote
+from src.chatbot.tools.embedding_qa_search import EmbeddingQASearch
 from src.chatbot.tools.get_note import GetNote
 from src.chatbot.tools.list_notes import ListNotes
 from src.chatbot.tools.registry import NOTES_TOOLS, create_tool_registry
 from src.chatbot.tools.search_notes import SearchNotes
 from src.chatbot.tools.update_note import UpdateNote
-from tests.conftest import APIAdapterFactory
+from tests.conftest import APIAdapterFactory, NoteDBFactory
+from tests.fakes.unavailable_embedding_search import UnavailableEmbeddingSearch
 from tests.helpers.tokens import access_token
 
 USER_ID = UUID("550e8400-e29b-41d4-a716-446655440099")
@@ -48,9 +50,7 @@ class TestCRUDTools:
         assert rendered.startswith("Showing 2 of 5 notes.")
         assert rendered.count("(id: ") == 2
 
-    def test_list_notes_survives_a_nonsense_limit(
-        self, api_adapter: APIAdapterFactory
-    ):
+    def test_list_notes_survives_a_nonsense_limit(self, api_adapter: APIAdapterFactory):
         adapter = api_adapter("db_1")
 
         # Models send strings, and occasionally rubbish. Neither may crash a
@@ -187,6 +187,44 @@ class TestKeywordSearch:
 
         assert tool(SearchNotes, adapter).run(query="kumquats") == "No notes found."
         assert "No query given" in tool(SearchNotes, adapter).run(query="  ")
+
+
+class TestEmbeddingQASearch:
+    def test_it_ranks_the_notes_it_finds(self, api_adapter: APIAdapterFactory):
+        adapter = api_adapter("db_1")
+
+        rendered = tool(EmbeddingQASearch, adapter).run(
+            query="how should I test the Anthropic client?"
+        )
+
+        # The fake ranks by word overlap rather than embedding similarity, so
+        # this asserts the tool renders a ranking, not that bge is any good.
+        assert rendered.split("# ")[1].startswith("Testing strategy")
+
+    def test_it_asks_for_a_query_rather_than_searching_for_nothing(
+        self, api_adapter: APIAdapterFactory
+    ):
+        adapter = api_adapter("db_1")
+
+        assert "No query given" in tool(EmbeddingQASearch, adapter).run(query="  ")
+        assert "No query given" in tool(EmbeddingQASearch, adapter).run()
+
+    def test_it_reports_a_miss(self, api_adapter: APIAdapterFactory):
+        adapter = api_adapter("db_1")
+
+        rendered = tool(EmbeddingQASearch, adapter).run(query="kumquats marzipan")
+
+        assert rendered == "No notes found."
+
+    def test_it_says_when_only_semantic_search_is_down(self, note_db: NoteDBFactory):
+        # The distinction the model needs: the notes are reachable, so it can
+        # fall back to keyword search instead of giving up on the notes.
+        adapter = UnavailableEmbeddingSearch(note_db("db_1"))
+
+        rendered = tool(EmbeddingQASearch, adapter).run(query="where did I park")
+
+        assert rendered == EmbeddingQASearch.unavailable_response
+        assert "search_notes" in rendered
 
 
 def test_the_registry_exposes_every_tool_with_a_usable_schema(

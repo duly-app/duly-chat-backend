@@ -3,6 +3,7 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from src.adapters.api.api_adapter import APIAdapter
+from src.adapters.api.errors import EmbeddingSearchUnavailable
 from src.adapters.security.service_token_service import (
     SERVICE_TOKEN_HEADER,
     ServiceTokenService,
@@ -11,8 +12,12 @@ from src.domain import Note
 from src.domain.notes import NoteID
 from src.domain.user import Token
 
+SERVICE_UNAVAILABLE = 503
+
 
 class HTTPResponse(Protocol):
+    status_code: int
+
     def raise_for_status(self) -> None: ...
 
     def json(self) -> Any: ...
@@ -82,6 +87,22 @@ class DulyAPI(APIAdapter):
 
         return [self._to_note(note_data) for note_data in response.json()["notes"]]
 
+    def get_notes_by_query_embedding(self, token: Token, query: str) -> list[Note]:
+        # A read, but one only this service may make, so it carries the
+        # service credential as writes do.
+        response = self._http.get(
+            f"{self._service_uri}/notes/search/semantic",
+            headers=self._service_headers(token),
+            params={"query": query},
+        )
+
+        if response.status_code == SERVICE_UNAVAILABLE:
+            raise EmbeddingSearchUnavailable(query)
+
+        response.raise_for_status()
+
+        return [self._to_note(note_data) for note_data in response.json()["notes"]]
+
     def get_note(self, token: Token, note_id: NoteID) -> Note:
         response = self._http.get(
             f"{self._service_uri}/notes/{note_id}", headers=self._headers(token)
@@ -93,7 +114,7 @@ class DulyAPI(APIAdapter):
     def create_note(self, token: Token, title: str, content: str) -> Note:
         response = self._http.post(
             f"{self._service_uri}/notes",
-            headers=self._write_headers(token),
+            headers=self._service_headers(token),
             json={"title": title, "content": content},
         )
         response.raise_for_status()
@@ -115,7 +136,7 @@ class DulyAPI(APIAdapter):
 
         response = self._http.put(
             f"{self._service_uri}/notes/{note_id}",
-            headers=self._write_headers(token),
+            headers=self._service_headers(token),
             json=changes,
         )
         response.raise_for_status()
@@ -125,7 +146,7 @@ class DulyAPI(APIAdapter):
     def delete_note(self, token: Token, note_id: NoteID) -> None:
         response = self._http.delete(
             f"{self._service_uri}/notes/{note_id}",
-            headers=self._write_headers(token),
+            headers=self._service_headers(token),
         )
         response.raise_for_status()
 
@@ -133,7 +154,7 @@ class DulyAPI(APIAdapter):
     def _headers(token: Token) -> dict[str, str]:
         return {"Authorization": f"Bearer {token}"}
 
-    def _write_headers(self, token: Token) -> dict[str, str]:
+    def _service_headers(self, token: Token) -> dict[str, str]:
         return {
             **self._headers(token),
             SERVICE_TOKEN_HEADER: self._service_token_service.create_token(),

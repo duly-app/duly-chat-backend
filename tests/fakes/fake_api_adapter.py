@@ -37,6 +37,9 @@ class FakeAPIAdapter(APIAdapter):
     def get_notes_by_keyword(self, token: Token, keyword: str) -> list[Note]:
         return self._note_db.search(self._user_id(token), keyword)
 
+    def get_notes_by_query_embedding(self, token: Token, query: str) -> list[Note]:
+        return self._note_db.search_by_query_embedding(self._user_id(token), query)
+
     def get_note(self, token: Token, note_id: NoteID) -> Note:
         return self._note_db.get(self._user_id(token), note_id)
 

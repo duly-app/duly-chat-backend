@@ -30,6 +30,15 @@ class APIAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_notes_by_query_embedding(self, token: Token, query: str) -> list[Note]:
+        """Notes nearest the query in meaning, closest first.
+
+        Raises EmbeddingSearchUnavailable when the notes service cannot embed
+        the query, which is a different problem from finding nothing.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_note(self, token: Token, note_id: NoteID) -> Note:
         raise NotImplementedError
 

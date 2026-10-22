@@ -10,6 +10,7 @@ from src.chatbot.threads.thread_store import ThreadID
 from src.chatbot.tools.create_note import CreateNote
 from src.chatbot.tools.current_time import CurrentTime
 from src.chatbot.tools.delete_note import DeleteNote
+from src.chatbot.tools.embedding_qa_search import EmbeddingQASearch
 from src.chatbot.tools.get_note import GetNote
 from src.chatbot.tools.list_notes import ListNotes
 from src.chatbot.tools.notes_tool import NotesTool
@@ -23,6 +24,7 @@ ToolConstructor: TypeAlias = Callable[[UserID, ThreadID, Token], Tool]
 NOTES_TOOLS: tuple[type[NotesTool], ...] = (
     ListNotes,
     SearchNotes,
+    EmbeddingQASearch,
     GetNote,
     CreateNote,
     UpdateNote,

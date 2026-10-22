@@ -132,6 +132,7 @@ def test_the_tool_schemas_come_from_the_registry(
     assert [tool["name"] for tool in tools] == [
         "list_notes",
         "search_notes",
+        "query_embedding_search",
         "get_note",
         "create_note",
         "update_note",

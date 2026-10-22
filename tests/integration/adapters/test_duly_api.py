@@ -3,8 +3,10 @@ from uuid import uuid4
 
 import jwt
 import pytest
+import requests
 
 from src.adapters.api.duly_api import DulyAPI
+from src.adapters.api.errors import EmbeddingSearchUnavailable
 from src.adapters.security.service_token_service import (
     SERVICE_SUBJECT,
     SERVICE_TOKEN_HEADER,
@@ -126,3 +128,34 @@ def test_a_note_is_narrowed_to_what_this_service_models(api: DulyAPI):
     assert str(notes[0].id) == NOTE_RESPONSE["id"]
     assert notes[0].title == "Groceries"
     assert notes[0].created_at.year == 2026
+
+
+def test_searching_by_meaning_carries_both_credentials(
+    api: DulyAPI, http: FakeHTTPClient
+):
+    # The notes service only lets the assistant search this way, so unlike
+    # the other reads this one presents the service credential.
+    api.get_notes_by_query_embedding(USER_JWT, "where did I park")
+
+    assert http.last_call["url"] == "http://notes/notes/search/semantic"
+    assert http.last_call["params"] == {"query": "where did I park"}
+    assert http.last_call["headers"]["Authorization"] == f"Bearer {USER_JWT}"
+    assert service_claims(http.last_call)["sub"] == SERVICE_SUBJECT
+
+
+def test_an_unavailable_embedder_is_told_apart_from_other_failures():
+    # 503 means the notes are fine and only the embedder is down, which the
+    # caller reports differently from a broken notes service.
+    http = FakeHTTPClient(collection_payload={"notes": []}, status_code=503)
+    api = DulyAPI("http://notes", ServiceTokenService(SERVICE_KEY), http_client=http)
+
+    with pytest.raises(EmbeddingSearchUnavailable):
+        api.get_notes_by_query_embedding(USER_JWT, "where did I park")
+
+
+def test_other_failures_still_raise_for_status():
+    http = FakeHTTPClient(collection_payload={"notes": []}, status_code=500)
+    api = DulyAPI("http://notes", ServiceTokenService(SERVICE_KEY), http_client=http)
+
+    with pytest.raises(requests.HTTPError):
+        api.get_notes_by_query_embedding(USER_JWT, "where did I park")

@@ -110,6 +110,24 @@ class NoteDB:
             if needle in fn.title.lower() or needle in fn.content.lower()
         ]
 
+    def search_by_query_embedding(self, user_id: UserID, query: str) -> list[Note]:
+        words = {word for word in query.lower().split() if len(word) > 2}
+
+        def score(note: FullNote) -> int:
+            haystack = f"{note.title}\n{note.content}".lower()
+
+            return sum(word in haystack for word in words)
+
+        scored = [(score(fn), fn) for fn in self._live_notes(user_id)]
+
+        return [
+            fn.to_note()
+            for hits, fn in sorted(
+                (pair for pair in scored if pair[0]),
+                key=lambda pair: (-pair[0], str(pair[1].id)),
+            )
+        ]
+
     def get(self, user_id: UserID, note_id: UUID) -> Note:
         return self._owned_note(user_id, note_id).to_note()
 
