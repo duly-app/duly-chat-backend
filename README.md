@@ -7,8 +7,9 @@
 | src/\_\_init\_\_.py                              |        0 |        0 |    100% |           |
 | src/adapters/\_\_init\_\_.py                     |        0 |        0 |    100% |           |
 | src/adapters/api/\_\_init\_\_.py                 |        0 |        0 |    100% |           |
-| src/adapters/api/api\_adapter.py                 |       24 |        6 |     75% |26, 30, 34, 38, 49, 53 |
-| src/adapters/api/duly\_api.py                    |       54 |        6 |     89% |58, 61, 64, 86-91 |
+| src/adapters/api/api\_adapter.py                 |       27 |        7 |     74% |26, 30, 39, 43, 47, 58, 62 |
+| src/adapters/api/duly\_api.py                    |       62 |        6 |     90% |63, 66, 69, 107-112 |
+| src/adapters/api/errors.py                       |        1 |        0 |    100% |           |
 | src/adapters/security/\_\_init\_\_.py            |        3 |        0 |    100% |           |
 | src/adapters/security/jwt\_codec.py              |       16 |        0 |    100% |           |
 | src/adapters/security/service\_token\_service.py |       13 |        0 |    100% |           |
@@ -30,10 +31,11 @@
 | src/chatbot/tools/create\_note.py                |       13 |        0 |    100% |           |
 | src/chatbot/tools/current\_time.py               |       17 |        4 |     76% |29-31, 34-36 |
 | src/chatbot/tools/delete\_note.py                |       17 |        1 |     94% |        34 |
+| src/chatbot/tools/embedding\_qa\_search.py       |       19 |        0 |    100% |           |
 | src/chatbot/tools/get\_note.py                   |       17 |        0 |    100% |           |
 | src/chatbot/tools/list\_notes.py                 |       22 |        4 |     82% |     82-85 |
 | src/chatbot/tools/notes\_tool.py                 |       14 |        0 |    100% |           |
-| src/chatbot/tools/registry.py                    |       26 |        0 |    100% |           |
+| src/chatbot/tools/registry.py                    |       27 |        0 |    100% |           |
 | src/chatbot/tools/rendering.py                   |       28 |        1 |     96% |        48 |
 | src/chatbot/tools/search\_notes.py               |       14 |        0 |    100% |           |
 | src/chatbot/tools/tool.py                        |       23 |        1 |     96% |        49 |
@@ -45,7 +47,7 @@
 | src/env.py                                       |       36 |        4 |     89% |29, 47-48, 63 |
 | src/logs.py                                      |       26 |        1 |     96% |        51 |
 | src/main.py                                      |        4 |        4 |      0% |       1-6 |
-| **TOTAL**                                        |  **794** |   **70** | **91%** |           |
+| **TOTAL**                                        |  **826** |   **71** | **91%** |           |
 
 
 ## Setup coverage badge
