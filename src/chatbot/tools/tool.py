@@ -11,6 +11,7 @@ class Tool(ABC):
     name: ClassVar[str]
     description: ClassVar[str]
     input_schema: ClassVar[dict[str, Any]]
+    requires_approval: ClassVar[bool] = False
 
     #: What the model is told when run() raises
     error_response: ClassVar[str]

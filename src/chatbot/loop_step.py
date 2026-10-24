@@ -1,14 +1,16 @@
 """The steps a run is made of: calling the model, and running the tools it asked for."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from anthropic import Anthropic
 from anthropic.types import MessageParam, ToolResultBlockParam, ToolUseBlock
 
 from src.adapters.api.api_adapter import APIAdapter
+from src.chatbot.approval import Decisions, PendingAction
 from src.chatbot.context.context_builder import ContextBuilder
 from src.chatbot.loop_result import (
+    ApprovalRequired,
     ModelResult,
     StepResult,
     StopReason,
@@ -17,8 +19,8 @@ from src.chatbot.loop_result import (
     Trajectory,
     conversation_history,
 )
-from src.chatbot.threads.thread_store import ThreadID, TurnID
-from src.chatbot.tools.registry import ToolRegistry
+from src.chatbot.threads.thread_store import ThreadID, TurnID, new_turn_id
+from src.chatbot.tools.registry import ToolRegistry, requires_approval
 from src.domain.user import Token, UserID
 
 MODEL = "claude-sonnet-5-5"
@@ -27,16 +29,24 @@ MAX_TOKENS = 4096
 
 @dataclass
 class LoopContext:
+    """What a run needs, and what it accumulates as it goes.
+
+    Built by the caller and handed to the loop, so starting a turn and
+    resuming one differ only in the step they begin with.
+    """
+
     user_id: UserID
     thread_id: ThreadID
-    turn_id: TurnID
     jwt: Token
-    history: list[MessageParam]
-    trajectory: Trajectory
     api_adapter: "APIAdapter"
     anthropic_client: Anthropic
     context_builder: ContextBuilder
     tool_registry: ToolRegistry
+    #: The conversation so far. Empty for a thread's first turn.
+    history: list[MessageParam] = field(default_factory=list)
+    #: This run's steps, appended as they happen.
+    trajectory: Trajectory = field(default_factory=list)
+    turn_id: TurnID = field(default_factory=new_turn_id)
 
 
 class LoopStep(ABC):
@@ -84,11 +94,20 @@ class ActionStep(LoopStep):
     """Runs the tools the model asked for. Makes no model call, so costs no tokens."""
 
     tool_calls: list[ToolUseBlock]
+    decisions: Decisions
 
-    def __init__(self, tool_calls: list[ToolUseBlock]):
+    def __init__(
+        self, tool_calls: list[ToolUseBlock], decisions: Decisions | None = None
+    ):
         self.tool_calls = tool_calls
+        self.decisions = decisions or {}
 
     def execute(self, context: LoopContext) -> tuple[StepResult, TokenUsage]:
+        undecided = self._undecided(context)
+
+        if undecided:
+            return ApprovalRequired(pending=undecided), TokenUsage()
+
         blocks = [self._run(context, call) for call in self.tool_calls]
 
         # Tool results travel as content blocks inside a user message: the
@@ -97,7 +116,25 @@ class ActionStep(LoopStep):
 
         return ToolResult(tool_result_message=message), TokenUsage()
 
+    def _undecided(self, context: LoopContext) -> list[PendingAction]:
+        """The gated tool calls the user has not decided on yet."""
+        return [
+            PendingAction.of(call)
+            for call in self.tool_calls
+            if requires_approval(context.tool_registry, call.name)
+            and call.id not in self.decisions
+        ]
+
     def _run(self, context: LoopContext, call: ToolUseBlock) -> ToolResultBlockParam:
+        decision = self.decisions.get(call.id)
+
+        if decision is not None and not decision.approved:
+            return {
+                "type": "tool_result",
+                "tool_use_id": call.id,
+                "content": decision.declined_content,
+            }
+
         tool_maker = context.tool_registry.get(call.name)
 
         if tool_maker is None:

@@ -4,14 +4,18 @@ from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from anthropic import Anthropic
+from anthropic.types import MessageParam
 
 from src.adapters.api.api_adapter import APIAdapter
 from src.bootstrap import create_context_builder
-from src.chatbot.loop import chat_loop
-from src.chatbot.loop_result import LoopOutcome
+from src.chatbot.loop import chat_loop, resume_turn
+from src.chatbot.loop_result import LoopOutcome, conversation_history
+from src.chatbot.loop_step import LoopContext
+from src.chatbot.threads.tool_calls import unanswered_tool_calls
 from src.chatbot.tools.registry import ToolRegistry, create_tool_registry
 from src.env import ANTHROPIC_API_KEY, OSEnv
 from tests.conftest import create_api_adapter, create_note_db
+from tests.e2e.evals.approvals import Approvals, decisions
 from tests.e2e.evals.eval_case import EvalCase
 from tests.helpers.tokens import access_token
 
@@ -21,16 +25,36 @@ TIMEZONE = ZoneInfo("UTC")
 
 def run_case(case: EvalCase, client: Anthropic) -> LoopOutcome:
     adapter = create_api_adapter(create_note_db(case.db))
+    thread_id = uuid4()
 
-    return chat_loop(
-        user_id=USER_ID,
-        thread_id=uuid4(),
-        message=case.question,
-        jwt=access_token(USER_ID),
-        api_adapter=adapter,
-        anthropic_client=client,
-        context_builder=create_context_builder(case.system_template),
-        tool_registry=tool_registry(case, adapter),
+    def context(history: list[MessageParam] | None = None) -> LoopContext:
+        return LoopContext(
+            user_id=USER_ID,
+            thread_id=thread_id,
+            jwt=access_token(USER_ID),
+            api_adapter=adapter,
+            anthropic_client=client,
+            context_builder=create_context_builder(case.system_template),
+            tool_registry=tool_registry(case, adapter),
+            history=history or [],
+        )
+
+    outcome = chat_loop(context(), case.question)
+
+    if not outcome.pending or case.approvals is Approvals.HOLD:
+        return outcome
+
+    history = conversation_history(outcome.trajectory)
+
+    resumed = resume_turn(
+        context(history),
+        unanswered_tool_calls(history),
+        decisions(outcome, case.approvals),
+    )
+
+    return LoopOutcome(
+        trajectory=[*outcome.trajectory, *resumed.trajectory],
+        usage=outcome.usage + resumed.usage,
     )
 
 

@@ -6,6 +6,7 @@ from src.chatbot.tools.notes_tool import NotesTool
 class CreateNote(NotesTool):
     name = "create_note"
     description = "Create a new note for the user. Confirm the content with them first."
+    requires_approval = True
     error_response = (
         "Could not reach the notes service. The note may or may not "
         "have been created; check before trying again."

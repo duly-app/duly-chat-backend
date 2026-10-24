@@ -11,6 +11,7 @@ class DeleteNote(NotesTool):
         "Delete one of the user's notes. Destructive: say which note you mean "
         "and get the user's explicit agreement before calling this."
     )
+    requires_approval = True
     error_response = (
         "Could not reach the notes service. The note may or may not "
         "have been deleted; check before trying again."

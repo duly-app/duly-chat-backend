@@ -1,7 +1,13 @@
 import json
 from typing import Any, Iterator, Mapping
 
-from src.chatbot.loop_result import LoopOutcome, ModelResult, StepResult, ToolResult
+from src.chatbot.loop_result import (
+    ApprovalRequired,
+    LoopOutcome,
+    ModelResult,
+    StepResult,
+    ToolResult,
+)
 from src.chatbot.threads.thread_store import ThreadID, TurnID
 from src.domain.user import UserID
 from src.logs import get_logger
@@ -94,6 +100,15 @@ def tool_calls(trajectory: list[StepResult]) -> list[dict[str, Any]]:
 
 
 def _step_fields(result: StepResult) -> dict[str, Any]:
+    if isinstance(result, ApprovalRequired):
+        return {
+            "kind": "approval",
+            "pending": [
+                {"id": action.tool_use_id, "name": action.name}
+                for action in result.pending
+            ],
+        }
+
     if isinstance(result, ModelResult):
         return {
             "kind": "model",

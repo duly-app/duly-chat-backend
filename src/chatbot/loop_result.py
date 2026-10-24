@@ -1,10 +1,13 @@
 """What a run of the loop produced: its steps, their results and what they cost."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TypeAlias
+from typing import Protocol, TypeAlias, TypeGuard
 
 from anthropic.types import ContentBlock, MessageParam, TextBlock, ToolUseBlock
+
+from src.chatbot.approval import PendingAction
 
 
 @dataclass(frozen=True)
@@ -69,12 +72,37 @@ class ToolResult:
     messages: list[MessageParam] = field(default_factory=list)
 
 
-StepResult: TypeAlias = ModelResult | ToolResult
+@dataclass(frozen=True)
+class ApprovalRequired:
+    pending: list[PendingAction]
+
+    #: Empty for the same reason a turn can resume at all: the message holding these
+    #  tool calls is already in the history
+    messages: list[MessageParam] = field(default_factory=list)
+
+
+StepResult: TypeAlias = ModelResult | ToolResult | ApprovalRequired
 
 Trajectory: TypeAlias = list[StepResult]
 
 
-def conversation_history(trajectory: Trajectory) -> list[MessageParam]:
+def is_awaiting_approval(result: StepResult) -> TypeGuard[ApprovalRequired]:
+    """Whether this step handed the turn back to the user."""
+    return isinstance(result, ApprovalRequired)
+
+
+class Recorded(Protocol):
+    """What every StepResult owes the history: the messages it put on the wire.
+
+    Stated as a protocol so a new result type is made to declare it rather
+    than discovering at runtime that conversation_history skipped it.
+    """
+
+    @property
+    def messages(self) -> list[MessageParam]: ...
+
+
+def conversation_history(trajectory: Iterable[Recorded]) -> list[MessageParam]:
     """The messages a trajectory put on the wire, in order."""
     return [message for result in trajectory for message in result.messages]
 
@@ -100,3 +128,10 @@ class LoopOutcome:
     def result(self) -> StepResult:
         """The step that ended the run."""
         return self.trajectory[-1]
+
+    @property
+    def pending(self) -> list[PendingAction]:
+        """The actions waiting on the user, empty unless the run stopped for them."""
+        result = self.result
+
+        return result.pending if is_awaiting_approval(result) else []

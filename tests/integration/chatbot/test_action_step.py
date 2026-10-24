@@ -5,7 +5,8 @@ import pytest
 import requests
 from anthropic.types import ToolUseBlock
 
-from src.chatbot.loop_result import StepResult, ToolResult
+from src.chatbot.approval import DECLINED, Decision
+from src.chatbot.loop_result import ApprovalRequired, StepResult, ToolResult
 from src.chatbot.loop_step import ActionStep, LoopContext
 from src.chatbot.tools.notes_tool import NotesTool
 from src.chatbot.tools.registry import RegisteredTool, create_tool_registry
@@ -141,3 +142,138 @@ def test_a_tool_without_an_error_response_cannot_be_defined():
 
             def run(self, **tool_input: Any) -> str:
                 return str(uuid4())
+
+
+def call(name: str, call_id: str = "toolu_1", **tool_input: Any) -> ToolUseBlock:
+    return ToolUseBlock(id=call_id, name=name, input=tool_input, type="tool_use")
+
+
+class TestApprovalGating:
+    def test_a_write_waits_for_the_user(self, api_adapter: APIAdapterFactory):
+        step = ActionStep([call("delete_note", note_id=str(uuid4()))])
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert isinstance(result, ApprovalRequired)
+        assert [action.name for action in result.pending] == ["delete_note"]
+        assert result.pending[0].tool_use_id == "toolu_1"
+
+    def test_the_pending_action_carries_what_was_asked_for(
+        self, api_adapter: APIAdapterFactory
+    ):
+        # The user has to see the actual input to approve it meaningfully.
+        step = ActionStep([call("create_note", title="Dune", content="Read it")])
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert isinstance(result, ApprovalRequired)
+        assert result.pending[0].input == {"title": "Dune", "content": "Read it"}
+
+    def test_a_read_runs_without_asking(self, api_adapter: APIAdapterFactory):
+        step = ActionStep([call("list_notes")])
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert isinstance(result, ToolResult)
+
+    def test_nothing_runs_while_one_call_waits(self, api_adapter: APIAdapterFactory):
+        # The whole batch waits, so resuming can run each tool exactly once
+        # instead of re-running the read or remembering its result.
+        ctx = context(api_adapter)
+        step = ActionStep(
+            [
+                call("list_notes", call_id="t1"),
+                call("delete_note", call_id="t2", note_id=str(uuid4())),
+            ]
+        )
+
+        result, _ = step.execute(ctx)
+
+        assert isinstance(result, ApprovalRequired)
+        assert [action.tool_use_id for action in result.pending] == ["t2"]
+
+    def test_an_approved_write_runs(self, api_adapter: APIAdapterFactory):
+        ctx = context(api_adapter)
+        created = ActionStep(
+            [call("create_note", title="Dune", content="Read it")],
+            {"toolu_1": Decision(approved=True)},
+        )
+
+        result, _ = created.execute(ctx)
+
+        assert isinstance(result, ToolResult)
+        assert result_blocks(result)[0]["content"].startswith('Created "Dune"')
+
+    def test_a_declined_write_does_not_run_and_says_so(
+        self, api_adapter: APIAdapterFactory
+    ):
+        ctx = context(api_adapter)
+        step = ActionStep(
+            [call("create_note", title="Dune", content="Read it")],
+            {"toolu_1": Decision(approved=False)},
+        )
+
+        result, _ = step.execute(ctx)
+        block = result_blocks(result)[0]
+
+        assert block["content"] == DECLINED
+        # Not an error: the user declining is a fact, not a malfunction.
+        assert "is_error" not in block
+
+        titles = ActionStep([call("list_notes")]).execute(ctx)[0]
+        assert "Dune" not in result_blocks(titles)[0]["content"]
+
+    def test_a_reason_reaches_the_model(self, api_adapter: APIAdapterFactory):
+        step = ActionStep(
+            [call("delete_note", note_id=str(uuid4()))],
+            {"toolu_1": Decision(approved=False, reason="Archive it instead")},
+        )
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert "Archive it instead" in result_blocks(result)[0]["content"]
+
+    def test_an_unknown_tool_is_not_gated(self, api_adapter: APIAdapterFactory):
+        # Reporting that the tool does not exist tells the model more than
+        # asking the user to approve a call that cannot run.
+        step = ActionStep([call("no_such_tool")])
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert isinstance(result, ToolResult)
+        assert result_blocks(result)[0]["is_error"] is True
+
+    def test_two_writes_in_one_batch_are_asked_about_together(
+        self, api_adapter: APIAdapterFactory
+    ):
+        # One prompt covering both, answered in one request: approving them
+        # separately would run the first while the second was still waiting.
+        step = ActionStep(
+            [
+                call("create_note", call_id="t1", title="Dune", content="Read it"),
+                call("delete_note", call_id="t2", note_id=str(uuid4())),
+            ]
+        )
+
+        result, _ = step.execute(context(api_adapter))
+
+        assert isinstance(result, ApprovalRequired)
+        assert [action.tool_use_id for action in result.pending] == ["t1", "t2"]
+
+    def test_answering_only_one_of_two_leaves_both_waiting(
+        self, api_adapter: APIAdapterFactory
+    ):
+        ctx = context(api_adapter)
+        calls = [
+            call("create_note", call_id="t1", title="Dune", content="Read it"),
+            call("delete_note", call_id="t2", note_id=str(uuid4())),
+        ]
+
+        result, _ = ActionStep(calls, {"t1": Decision(approved=True)}).execute(ctx)
+
+        # The approved one has not run: a partially answered batch runs nothing.
+        assert isinstance(result, ApprovalRequired)
+        assert [action.tool_use_id for action in result.pending] == ["t2"]
+
+        listed = ActionStep([call("list_notes")]).execute(ctx)[0]
+        assert "Dune" not in result_blocks(listed)[0]["content"]

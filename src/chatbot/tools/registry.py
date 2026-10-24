@@ -36,9 +36,21 @@ NOTES_TOOLS: tuple[type[NotesTool], ...] = (
 class RegisteredTool:
     schema: ToolParam
     create: ToolConstructor
+    requires_approval: bool = False
 
 
 ToolRegistry: TypeAlias = dict[str, RegisteredTool]
+
+
+def requires_approval(registry: ToolRegistry, name: str) -> bool:
+    """Whether this tool may only run once the user has said yes.
+
+    An unknown name is not gated: reporting that the tool does not exist
+    tells the model more than asking the user about a call that cannot run.
+    """
+    registered = registry.get(name)
+
+    return registered is not None and registered.requires_approval
 
 
 def create_tool_registry(
@@ -48,7 +60,9 @@ def create_tool_registry(
     zone = timezone or ZoneInfo("UTC")
     notes_tools = {
         tool.name: RegisteredTool(
-            schema=tool.schema(), create=partial(tool, api_adapter)
+            schema=tool.schema(),
+            create=partial(tool, api_adapter),
+            requires_approval=tool.requires_approval,
         )
         for tool in NOTES_TOOLS
     }
@@ -56,6 +70,8 @@ def create_tool_registry(
     return {
         **notes_tools,
         CurrentTime.name: RegisteredTool(
-            schema=CurrentTime.schema(), create=partial(CurrentTime, zone)
+            schema=CurrentTime.schema(),
+            create=partial(CurrentTime, zone),
+            requires_approval=CurrentTime.requires_approval,
         ),
     }

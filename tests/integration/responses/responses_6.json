@@ -1,0 +1,79 @@
+[
+    {
+        "input": {
+            "role": "user",
+            "content": "Add Dune to my reading list and rename the list."
+        },
+        "next_response": {
+            "stop_reason": "tool_use",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "toolu_01",
+                    "name": "create_note",
+                    "input": {
+                        "title": "Dune",
+                        "content": "Read it"
+                    }
+                }
+            ],
+            "usage": {
+                "input_tokens": 120,
+                "output_tokens": 30
+            }
+        }
+    },
+    {
+        "input": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_01"
+                }
+            ]
+        },
+        "next_response": {
+            "stop_reason": "tool_use",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "toolu_02",
+                    "name": "create_note",
+                    "input": {
+                        "title": "Reading list 2026",
+                        "content": "Dune"
+                    }
+                }
+            ],
+            "usage": {
+                "input_tokens": 200,
+                "output_tokens": 30
+            }
+        }
+    },
+    {
+        "input": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_02"
+                }
+            ]
+        },
+        "next_response": {
+            "stop_reason": "end_turn",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Both notes are made."
+                }
+            ],
+            "usage": {
+                "input_tokens": 300,
+                "output_tokens": 40
+            }
+        }
+    }
+]

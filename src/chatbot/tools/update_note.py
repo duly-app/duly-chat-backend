@@ -11,6 +11,7 @@ class UpdateNote(NotesTool):
         "Change a note's title, its content, or both. Whatever is left out is "
         "kept as it was, so send only what should change."
     )
+    requires_approval = True
     error_response = (
         "Could not reach the notes service. The note may or may not "
         "have been updated; check before trying again."
